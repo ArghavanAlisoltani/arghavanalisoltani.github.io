@@ -14,7 +14,6 @@ This repository hosts a responsive personal website with:
 ## Repository Structure
 
 - `index.html` — Main website page (HTML + embedded CSS)
-- `aria-resume-nextjs.zip` — Archived related project/resume assets
 
 ## Run Locally
 
