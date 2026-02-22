@@ -1,1 +1,885 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>End-to-End 16S rRNA Amplicon Analysis Course (QIIME 2 + DADA2)</title>
+  <meta name="description" content="A detailed, end-to-end 16S rRNA amplicon sequencing analysis course with modern pipelines, visualization, alpha/beta diversity, and differential abundance." />
 
+  <style>
+    :root{
+      --bg:#0b1020; --panel:#111a33; --panel2:#0f1730;
+      --text:#e9eefc; --muted:#aab6e8; --accent:#7aa2ff; --accent2:#70ffd1;
+      --border:rgba(255,255,255,.10); --shadow:0 10px 30px rgba(0,0,0,.35);
+      --radius:16px; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      --sans:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; font-family:var(--sans); color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.20), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(112,255,209,.12), transparent 55%),
+        var(--bg);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{padding:28px 18px 18px; max-width:1250px; margin:0 auto}
+    .hero{
+      background: linear-gradient(135deg, rgba(122,162,255,.18), rgba(17,26,51,.0));
+      border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:18px 18px;
+    }
+    h1{margin:0 0 10px; font-size:clamp(22px,4vw,36px); letter-spacing:.2px}
+    .subtitle{margin:0 0 12px; color:var(--muted); line-height:1.6; font-size:15px; max-width:1050px}
+    .kicker{color:var(--accent2); font-weight:900; letter-spacing:.3px; text-transform:uppercase; font-size:12px; margin-top:12px}
+    .top-actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; align-items:center; justify-content:space-between}
+    .search-wrap{display:flex; gap:10px; align-items:center; flex:1; min-width:260px}
+    input[type="search"]{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      background:rgba(255,255,255,.04); color:var(--text); outline:none;
+    }
+    input[type="search"]::placeholder{color:rgba(233,238,252,.55)}
+    .btn{
+      padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      background:rgba(255,255,255,.06); color:var(--text); cursor:pointer; font-weight:800; white-space:nowrap;
+    }
+    .btn:hover{background:rgba(255,255,255,.10)}
+    main{max-width:1250px; margin:0 auto; padding:0 18px 48px; display:grid; grid-template-columns:320px 1fr; gap:14px}
+    nav{
+      position:sticky; top:14px; align-self:start; height:calc(100vh - 28px); overflow:auto;
+      border:1px solid var(--border); border-radius:var(--radius);
+      background:rgba(17,26,51,.55); backdrop-filter:blur(10px); box-shadow:var(--shadow); padding:12px;
+    }
+    nav h2{font-size:13px; margin:6px 8px 10px; color:var(--muted); letter-spacing:.4px; text-transform:uppercase}
+    .toc a{
+      display:block; padding:8px 10px; border-radius:12px; color:var(--text);
+      border:1px solid transparent; font-size:14px; line-height:1.35;
+    }
+    .toc a:hover{background:rgba(255,255,255,.06); border-color:var(--border); text-decoration:none}
+    .content{display:flex; flex-direction:column; gap:12px}
+    .card{
+      border:1px solid var(--border); border-radius:var(--radius);
+      background:rgba(17,26,51,.45); backdrop-filter:blur(10px); box-shadow:var(--shadow); overflow:hidden;
+    }
+    .card-header{
+      padding:14px 16px; border-bottom:1px solid var(--border); background:rgba(15,23,48,.55);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap;
+    }
+    .card-title{margin:0; font-size:16px; line-height:1.35}
+    .tag{font-size:12px; color:var(--muted); border:1px solid var(--border); padding:4px 10px; border-radius:999px; background:rgba(255,255,255,.04)}
+    .card-body{padding:14px 16px 16px; line-height:1.65; font-size:14.5px}
+    .muted{color:var(--muted)} .small{font-size:13px}
+    .grid2{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:10px}
+    .box{border:1px solid var(--border); border-radius:14px; padding:12px; background:rgba(0,0,0,.20)}
+    .box h3{margin:0 0 6px; font-size:14px}
+    .box p{margin:0; color:var(--muted); font-size:13.5px; line-height:1.55}
+    details{border:1px solid var(--border); background:rgba(255,255,255,.03); border-radius:14px; padding:10px 12px; margin:12px 0 0}
+    summary{cursor:pointer; font-weight:900; list-style:none; user-select:none}
+    summary::-webkit-details-marker{display:none}
+    summary:before{content:"▸"; margin-right:8px; color:var(--muted)}
+    details[open] summary:before{content:"▾"}
+    .codeblock pre{
+      margin:10px 0 0; border-radius:14px; border:1px solid var(--border);
+      background:rgba(0,0,0,.32); overflow:auto; padding:14px 12px 12px; position:relative;
+    }
+    .codeblock code{font-family:var(--mono); font-size:12.8px; line-height:1.55; white-space:pre; display:block}
+    .copy-btn{
+      position:absolute; top:10px; right:10px; padding:6px 10px; border-radius:10px;
+      border:1px solid var(--border); background:rgba(255,255,255,.06); color:var(--text);
+      cursor:pointer; font-weight:900; font-size:12px; user-select:none;
+    }
+    .copy-btn:hover{background:rgba(255,255,255,.10)}
+    .pillrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px;
+      border:1px solid var(--border); background:rgba(255,255,255,.05); color:var(--text);
+      font-weight:900; font-size:13px;
+    }
+    .pill:hover{background:rgba(255,255,255,.10); text-decoration:none}
+    .warn{border-left:4px solid rgba(255,180,90,.9); padding:10px 12px; background:rgba(255,180,90,.08); border-radius:12px; margin-top:10px}
+    .ok{border-left:4px solid rgba(112,255,209,.9); padding:10px 12px; background:rgba(112,255,209,.08); border-radius:12px; margin-top:10px}
+    ul{margin:8px 0 0 18px} li{margin:4px 0}
+    @media (max-width:1020px){main{grid-template-columns:1fr} nav{position:relative; height:auto} .grid2{grid-template-columns:1fr}}
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="hero">
+    <h1>End-to-End 16S rRNA Amplicon Analysis Course</h1>
+    <p class="subtitle">
+      Practical course for <b>16S rRNA amplicon sequencing</b>: from raw FASTQs → ASVs → taxonomy → <b>visualizations</b> →
+      <b>alpha/beta diversity</b> → differential abundance → export/reporting.
+    </p>
+
+    <div class="kicker">Tracks</div>
+    <p class="subtitle">
+      <b>Track A (recommended):</b> QIIME 2 (artifacts + provenance + interactive visualizations).<br/>
+      <b>Track B:</b> Pure R (DADA2 + phyloseq + vegan + ANCOM-BC2) for full scripting control.
+    </p>
+
+    <div class="top-actions">
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Filter (e.g., 'Emperor', 'alpha rarefaction', 'phyloseq', 'PERMANOVA', 'heatmap')…" />
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+      <button class="btn" id="copyLink">Copy page link</button>
+    </div>
+
+    <div class="pillrow">
+      <a class="pill" href="#lesson2">Import + QC</a>
+      <a class="pill" href="#lesson4">DADA2 (ASVs)</a>
+      <a class="pill" href="#lesson5">Taxonomy + barplots</a>
+      <a class="pill" href="#lesson6">Alpha/Beta + Emperor</a>
+      <a class="pill" href="#lesson6viz">Visualization gallery</a>
+      <a class="pill" href="#lesson7">Differential abundance</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav>
+    <h2>Course map</h2>
+    <div class="toc">
+      <a href="#overview">Overview</a>
+      <a href="#project">Project structure</a>
+      <a href="#lesson0">Lesson 0 — Install</a>
+      <a href="#lesson1">Lesson 1 — Metadata</a>
+      <a href="#lesson2">Lesson 2 — Import + QC</a>
+      <a href="#lesson3">Lesson 3 — Primer trimming</a>
+      <a href="#lesson4">Lesson 4 — DADA2 / ASVs</a>
+      <a href="#lesson5">Lesson 5 — Taxonomy + barplots</a>
+      <a href="#lesson6">Lesson 6 — Alpha/Beta diversity</a>
+      <a href="#lesson6viz">Lesson 6b — Visualization gallery</a>
+      <a href="#lesson7">Lesson 7 — Differential abundance</a>
+      <a href="#lesson9">Lesson 9 — Export + reporting</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+      <a href="#refs">Official tool links</a>
+    </div>
+  </nav>
+
+  <section class="content">
+
+    <article class="card topic" id="overview" data-keywords="overview alpha beta diversity visualization emperor rarefaction">
+      <div class="card-header">
+        <h2 class="card-title">Overview</h2>
+        <span class="tag">You will learn</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Core outputs</h3>
+            <p>
+              ASV table + rep-seqs + taxonomy + rooted tree + alpha/beta diversity +
+              interactive ordinations (Emperor) + publication-ready plots.
+            </p>
+          </div>
+          <div class="box">
+            <h3>Visualization built-in</h3>
+            <p>
+              Quality plots, taxa barplots, rarefaction curves, Emperor PCoA, heatmaps,
+              and R/ggplot2 plotting recipes.
+            </p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card topic" id="project" data-keywords="project structure folders results">
+      <div class="card-header">
+        <h2 class="card-title">Project structure</h2>
+        <span class="tag">Copy-paste</span>
+      </div>
+      <div class="card-body">
+        <div class="codeblock" data-src="code-structure" data-lang="bash"></div>
+      </div>
+    </article>
+
+    <article class="card topic" id="lesson0" data-keywords="install qiime2 docker dada2">
+      <div class="card-header">
+        <h2 class="card-title">Lesson 0 — Install & sanity checks</h2>
+        <span class="tag">Setup</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>QIIME 2 via Docker (recommended)</summary>
+          <div class="codeblock" data-src="code-qiime2-docker" data-lang="bash"></div>
+        </details>
+        <details>
+          <summary>R packages (DADA2 + phyloseq + vegan + ANCOM-BC2)</summary>
+          <div class="codeblock" data-src="code-r-install" data-lang="r"></div>
+        </details>
+      </div>
+    </article>
+
+    <article class="card topic" id="lesson1" data-keywords="metadata keemei design batch">
+      <div class="card-header">
+        <h2 class="card-title">Lesson 1 — Metadata (do this first)</h2>
+        <span class="tag">High impact</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Templates: metadata + manifest</summary>
+          <div class="codeblock" data-src="code-metadata-template" data-lang="text"></div>
+          <div class="codeblock" data-src="code-manifest-template" data-lang="text"></div>
+          <div class="ok"><b>Tip:</b> Validate with Keemei or QIIME 2 metadata validation before running anything.</div>
+        </details>
+      </div>
+    </article>
+
+    <article class="card topic" id="lesson2" data-keywords="import demux summarize quality plot visualization">
+      <div class="card-header">
+        <h2 class="card-title">Lesson 2 — Import reads & inspect quality (visual)</h2>
+        <span class="tag">QC visualization</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>QIIME 2 import + demux summary (interactive quality plots)</summary>
+          <div class="codeblock" data-src="code-qiime-import" data-lang="bash"></div>
+          <p class="muted small">Open QZV files using https://view.qiime2.org/ for interactive plots.</p>
+        </details>
+      </div>
+    </article>
+
+    <article class="card topic" id="lesson3" data-keywords="cutadapt trim primers visualization">
+      <div class="card-header">
+        <h2 class="card-title">Lesson 3 — Primer trimming (cutadapt) + re-QC</h2>
+        <span class="tag">Required</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Trim primers then re-run demux summarize (quality visualization again)</summary>
+          <div class="codeblock" data-src="code-cutadapt" data-lang="bash"></div>
+        </details>
+      </div>
+    </article>
+
+    <article class="card topic" id="lesson4" data-keywords="dada2 denoise asv stats visualization">
+      <div class="card-header">
+        <h2 class="card-title">Lesson 4 — DADA2 (ASVs) + diagnostics</h2>
+        <span class="tag">Core step</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>QIIME 2 DADA2 + DADA2 stats visualization</summary>
+          <div class="codeblock" data-src="code-qiime-dada2" data-lang="bash"></div>
+        </details>
+        <details>
+          <summary>Track B: full R DADA2 script</summary>
+          <div class="codeblock" data-src="code-dada2-full" data-lang="r"></div>
+        </details>
+      </div>
+    </article>
+
+    <article class="card topic" id="lesson5" data-keywords="taxonomy classify-sklearn barplot visualization heatmap collapse">
+      <div class="card-header">
+        <h2 class="card-title">Lesson 5 — Taxonomy + core visualizations</h2>
+        <span class="tag">Taxa plots</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Taxonomy assignment + interactive taxa barplots</summary>
+          <div class="codeblock" data-src="code-qiime-taxonomy" data-lang="bash"></div>
+        </details>
+        <details>
+          <summary>Filter chloroplast/mitochondria/unassigned</summary>
+          <div class="codeblock" data-src="code-qiime-filter-nontarget" data-lang="bash"></div>
+        </details>
+        <details>
+          <summary>Extra visuals: collapse taxonomy + relative abundance + heatmap</summary>
+          <div class="codeblock" data-src="code-qiime-heatmaps" data-lang="bash"></div>
+        </details>
+      </div>
+    </article>
+
+    <article class="card topic" id="lesson6" data-keywords="alpha beta diversity emperor pcoa unifrac bray curtis rarefaction visualization">
+      <div class="card-header">
+        <h2 class="card-title">Lesson 6 — Alpha/Beta diversity + Emperor ordinations</h2>
+        <span class="tag">Downstream ecology</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Phylogeny + core diversity metrics (includes Emperor PCoA visualizations)</summary>
+          <div class="codeblock" data-src="code-qiime-phylogeny-diversity" data-lang="bash"></div>
+          <div class="ok">
+            <b>What you get automatically:</b> interactive Emperor PCoA plots (QZV) for Bray–Curtis, Jaccard, UniFrac, etc.
+            They are created inside <code>results/05_diversity/core-metrics/</code>.
+          </div>
+        </details>
+
+        <details open>
+          <summary>Alpha rarefaction curves (interactive visualization)</summary>
+          <div class="codeblock" data-src="code-qiime-alpha-rarefaction" data-lang="bash"></div>
+        </details>
+
+        <details>
+          <summary>PERMANOVA (beta-group-significance) + pairwise comparisons</summary>
+          <div class="codeblock" data-src="code-qiime-permanova" data-lang="bash"></div>
+        </details>
+
+        <details>
+          <summary>Track B (R): alpha/beta visualizations + PERMANOVA + dispersion</summary>
+          <div class="codeblock" data-src="code-r-viz-diversity" data-lang="r"></div>
+        </details>
+      </div>
+    </article>
+
+    <article class="card topic" id="lesson6viz" data-keywords="visualization gallery emperor biplot pcoa heatmap barplot ggplot phyloseq">
+      <div class="card-header">
+        <h2 class="card-title">Lesson 6b — Visualization gallery (what to show in a paper)</h2>
+        <span class="tag">Figures</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Must-have figures</h3>
+            <p>
+              (1) Quality plots, (2) DADA2 read retention + chimera stats, (3) taxa barplots,
+              (4) alpha diversity boxplots, (5) beta diversity ordination + PERMANOVA, (6) heatmap (top taxa).
+            </p>
+          </div>
+          <div class="box">
+            <h3>Nice-to-have</h3>
+            <p>
+              (1) Alpha rarefaction curves, (2) ordination biplots with feature vectors,
+              (3) longitudinal trajectories (if repeated measures), (4) DA volcano/forest plots.
+            </p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>Where are my Emperor plots?</summary>
+          <ul>
+            <li>After <code>core-metrics-phylogenetic</code>, open: <code>.../bray_curtis_emperor.qzv</code>, <code>.../unweighted_unifrac_emperor.qzv</code>, etc.</li>
+            <li>Use https://view.qiime2.org/ to explore and export screenshots for figures.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Optional: Make a custom Emperor plot from any distance matrix</summary>
+          <div class="codeblock" data-src="code-qiime-custom-emperor" data-lang="bash"></div>
+        </details>
+      </div>
+    </article>
+
+    <article class="card topic" id="lesson7" data-keywords="differential abundance ancom ancombc2 visualization">
+      <div class="card-header">
+        <h2 class="card-title">Lesson 7 — Differential abundance + result visualization</h2>
+        <span class="tag">Compositional-aware</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>QIIME 2 ANCOM (baseline)</summary>
+          <div class="codeblock" data-src="code-qiime-ancom" data-lang="bash"></div>
+        </details>
+
+        <details open>
+          <summary>ANCOM-BC2 in R (recommended) + plot results</summary>
+          <div class="codeblock" data-src="code-export-qiime-to-r" data-lang="bash"></div>
+          <div class="codeblock" data-src="code-ancombc2" data-lang="r"></div>
+          <div class="codeblock" data-src="code-ancombc2-plot" data-lang="r"></div>
+        </details>
+
+        <div class="warn">
+          <b>Interpretation:</b> report effect size + adjusted p-values; note covariates (batch/subject).
+          Avoid “percent abundance” interpretations without compositional context.
+        </div>
+      </div>
+    </article>
+
+    <article class="card topic" id="lesson9" data-keywords="export report reproducibility provenance">
+      <div class="card-header">
+        <h2 class="card-title">Lesson 9 — Export + reporting</h2>
+        <span class="tag">Publish-ready</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Export key artifacts + bundle results</summary>
+          <div class="codeblock" data-src="code-export-bundle" data-lang="bash"></div>
+        </details>
+      </div>
+    </article>
+
+    <article class="card topic" id="troubleshooting" data-keywords="troubleshooting merge overlap low reads rarefaction">
+      <div class="card-header">
+        <h2 class="card-title">Troubleshooting</h2>
+        <span class="tag">Fix fast</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Paired-end reads won’t merge</summary>
+          <ul>
+            <li>Overlap too short → reduce truncation or verify amplicon length.</li>
+            <li>Primer trimming/orientation mismatch → confirm primers and read direction.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Alpha rarefaction curves never plateau</summary>
+          <ul>
+            <li>Sampling depth might be too low; consider removing shallow samples or resequencing.</li>
+            <li>High richness environment → plateau may be hard; interpret cautiously.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <article class="card topic" id="refs" data-keywords="qiime2 2026.1 dada2 1.26 alpha rarefaction emperor">
+      <div class="card-header">
+        <h2 class="card-title">Official tool links</h2>
+        <span class="tag">Docs</span>
+      </div>
+      <div class="card-body">
+        <div class="pillrow">
+          <a class="pill" href="https://qiime2.org/" target="_blank" rel="noopener">QIIME 2</a>
+          <a class="pill" href="https://library.qiime2.org/quickstart/amplicon" target="_blank" rel="noopener">QIIME 2 Amplicon Quickstart</a>
+          <a class="pill" href="https://docs.qiime2.org/" target="_blank" rel="noopener">QIIME 2 Docs (choose your version)</a>
+          <a class="pill" href="https://docs.qiime2.org/2024.10/plugins/available/diversity/alpha-rarefaction/" target="_blank" rel="noopener">Alpha rarefaction (QIIME 2)</a>
+          <a class="pill" href="https://docs.qiime2.org/2024.10/plugins/available/diversity/core-metrics-phylogenetic/" target="_blank" rel="noopener">core-metrics-phylogenetic</a>
+          <a class="pill" href="https://keemei.qiime2.org/" target="_blank" rel="noopener">Keemei</a>
+          <a class="pill" href="https://benjjneb.github.io/dada2/" target="_blank" rel="noopener">DADA2</a>
+          <a class="pill" href="https://www.bioconductor.org/packages/release/bioc/vignettes/ANCOMBC/inst/doc/ANCOMBC2.html" target="_blank" rel="noopener">ANCOM-BC2</a>
+          <a class="pill" href="https://bioconductor.org/packages/release/bioc/html/phyloseq.html" target="_blank" rel="noopener">phyloseq</a>
+          <a class="pill" href="https://cran.r-project.org/package=vegan" target="_blank" rel="noopener">vegan</a>
+        </div>
+      </div>
+    </article>
+
+  </section>
+</main>
+
+<!-- =========================
+     CODE SNIPPETS (RAW TEXT)
+========================= -->
+<script type="text/plain" id="code-structure">
+mkdir -p project/{raw_reads,metadata,refs,results/{00_import,01_trim,02_dada2,03_taxonomy,04_tree,05_diversity,06_da,99_exports},scripts,logs}
+</script>
+
+<script type="text/plain" id="code-qiime2-docker">
+# Pull the current QIIME 2 Amplicon image (example: 2026.1)
+docker pull quay.io/qiime2/amplicon:2026.1
+
+# Sanity check
+docker run -v "$(pwd)":/data -it quay.io/qiime2/amplicon:2026.1 qiime info
+
+# Optional alias for convenience (bash/zsh)
+alias qiime='docker run --rm -v "$(pwd)":/data -w /data quay.io/qiime2/amplicon:2026.1 qiime'
+qiime info
+</script>
+
+<script type="text/plain" id="code-r-install">
+if (!requireNamespace("BiocManager", quietly = TRUE)) install.packages("BiocManager")
+BiocManager::install(c("dada2","phyloseq","ANCOMBC","Biostrings"), ask = FALSE)
+install.packages(c("tidyverse","vegan","ggplot2","patchwork"))
+</script>
+
+<script type="text/plain" id="code-metadata-template">
+# metadata/sample-metadata.tsv
+sample-id	subject	group	batch	body_site	collection_date
+S01	P01	case	run1	gut	2026-01-10
+S02	P01	case	run1	gut	2026-01-12
+S03	P02	control	run1	skin	2026-01-10
+S04	P02	control	run2	skin	2026-01-12
+</script>
+
+<script type="text/plain" id="code-manifest-template">
+# metadata/manifest.tsv (PairedEndFastqManifestPhred33V2)
+sample-id	forward-absolute-filepath	reverse-absolute-filepath
+S01	/ABS/PATH/raw_reads/S01_R1.fastq.gz	/ABS/PATH/raw_reads/S01_R2.fastq.gz
+S02	/ABS/PATH/raw_reads/S02_R1.fastq.gz	/ABS/PATH/raw_reads/S02_R2.fastq.gz
+</script>
+
+<script type="text/plain" id="code-qiime-import">
+qiime tools import \
+  --type 'SampleData[PairedEndSequencesWithQuality]' \
+  --input-path metadata/manifest.tsv \
+  --output-path results/00_import/demux-paired.qza \
+  --input-format PairedEndFastqManifestPhred33V2
+
+qiime demux summarize \
+  --i-data results/00_import/demux-paired.qza \
+  --o-visualization results/00_import/demux-summary.qzv
+</script>
+
+<script type="text/plain" id="code-cutadapt">
+FWD_PRIMER=GTGCCAGCMGCCGCGGTAA
+REV_PRIMER=GGACTACHVGGGTWTCTAAT
+
+qiime cutadapt trim-paired \
+  --i-demultiplexed-sequences results/00_import/demux-paired.qza \
+  --p-frontend ${FWD_PRIMER} \
+  --p-adapter ${REV_PRIMER} \
+  --p-error-rate 0.1 \
+  --p-discard-untrimmed \
+  --o-trimmed-sequences results/01_trim/demux-trimmed.qza \
+  --verbose
+
+qiime demux summarize \
+  --i-data results/01_trim/demux-trimmed.qza \
+  --o-visualization results/01_trim/demux-trimmed-summary.qzv
+</script>
+
+<script type="text/plain" id="code-qiime-dada2">
+TRUNC_F=240
+TRUNC_R=200
+
+qiime dada2 denoise-paired \
+  --i-demultiplexed-seqs results/01_trim/demux-trimmed.qza \
+  --p-trunc-len-f ${TRUNC_F} \
+  --p-trunc-len-r ${TRUNC_R} \
+  --p-n-threads 0 \
+  --o-table results/02_dada2/table.qza \
+  --o-representative-sequences results/02_dada2/rep-seqs.qza \
+  --o-denoising-stats results/02_dada2/denoising-stats.qza
+
+qiime feature-table summarize \
+  --i-table results/02_dada2/table.qza \
+  --m-sample-metadata-file metadata/sample-metadata.tsv \
+  --o-visualization results/02_dada2/table-summary.qzv
+
+qiime metadata tabulate \
+  --m-input-file results/02_dada2/denoising-stats.qza \
+  --o-visualization results/02_dada2/denoising-stats.qzv
+</script>
+
+<script type="text/plain" id="code-dada2-full">
+library(dada2)
+library(tidyverse)
+
+path <- "raw_reads"
+fnFs <- sort(list.files(path, pattern="_R1.fastq.gz", full.names=TRUE))
+fnRs <- sort(list.files(path, pattern="_R2.fastq.gz", full.names=TRUE))
+sample.names <- sapply(strsplit(basename(fnFs), "_"), `[`, 1)
+
+filt_path <- "results/dada2_filtered"
+dir.create(filt_path, recursive=TRUE, showWarnings=FALSE)
+filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.fastq.gz"))
+
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs,
+                     truncLen=c(240,200), maxN=0, maxEE=c(2,2),
+                     truncQ=2, rm.phix=TRUE, compress=TRUE, multithread=TRUE)
+
+errF <- learnErrors(filtFs, multithread=TRUE)
+errR <- learnErrors(filtRs, multithread=TRUE)
+
+derepFs <- derepFastq(filtFs); derepRs <- derepFastq(filtRs)
+names(derepFs) <- sample.names; names(derepRs) <- sample.names
+
+dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
+dadaRs <- dada(derepRs, err=errR, multithread=TRUE)
+mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose=TRUE)
+
+seqtab <- makeSequenceTable(mergers)
+seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
+
+saveRDS(seqtab.nochim, "results/seqtab.nochim.rds")
+cat("ASVs:", ncol(seqtab.nochim), " Samples:", nrow(seqtab.nochim), "\n")
+</script>
+
+<script type="text/plain" id="code-qiime-taxonomy">
+CLASSIFIER=refs/silva-*-nb-classifier.qza
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier ${CLASSIFIER} \
+  --i-reads results/02_dada2/rep-seqs.qza \
+  --o-classification results/03_taxonomy/taxonomy.qza
+
+qiime taxa barplot \
+  --i-table results/02_dada2/table.qza \
+  --i-taxonomy results/03_taxonomy/taxonomy.qza \
+  --m-metadata-file metadata/sample-metadata.tsv \
+  --o-visualization results/03_taxonomy/taxa-barplot.qzv
+</script>
+
+<script type="text/plain" id="code-qiime-filter-nontarget">
+qiime taxa filter-table \
+  --i-table results/02_dada2/table.qza \
+  --i-taxonomy results/03_taxonomy/taxonomy.qza \
+  --p-exclude mitochondria,chloroplast,Unassigned \
+  --o-filtered-table results/03_taxonomy/table-filtered.qza
+
+qiime taxa filter-seqs \
+  --i-sequences results/02_dada2/rep-seqs.qza \
+  --i-taxonomy results/03_taxonomy/taxonomy.qza \
+  --p-exclude mitochondria,chloroplast,Unassigned \
+  --o-filtered-sequences results/03_taxonomy/rep-seqs-filtered.qza
+</script>
+
+<script type="text/plain" id="code-qiime-heatmaps">
+# Collapse to genus level (Level 6 is commonly genus for SILVA-formatted strings)
+qiime taxa collapse \
+  --i-table results/03_taxonomy/table-filtered.qza \
+  --i-taxonomy results/03_taxonomy/taxonomy.qza \
+  --p-level 6 \
+  --o-collapsed-table results/03_taxonomy/table-genus.qza
+
+# Convert to relative frequency for visualization
+qiime feature-table relative-frequency \
+  --i-table results/03_taxonomy/table-genus.qza \
+  --o-relative-frequency-table results/03_taxonomy/table-genus-relfreq.qza
+
+# Heatmap (top 50 taxa is a good start; tune)
+qiime feature-table heatmap \
+  --i-table results/03_taxonomy/table-genus-relfreq.qza \
+  --m-sample-metadata-file metadata/sample-metadata.tsv \
+  --m-sample-metadata-column group \
+  --p-cluster both \
+  --p-feature-count 50 \
+  --o-visualization results/03_taxonomy/genus-heatmap.qzv
+</script>
+
+<script type="text/plain" id="code-qiime-phylogeny-diversity">
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences results/03_taxonomy/rep-seqs-filtered.qza \
+  --o-alignment results/04_tree/aligned-rep-seqs.qza \
+  --o-masked-alignment results/04_tree/masked-aligned-rep-seqs.qza \
+  --o-tree results/04_tree/unrooted-tree.qza \
+  --o-rooted-tree results/04_tree/rooted-tree.qza
+
+SAMPLING_DEPTH=10000
+
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny results/04_tree/rooted-tree.qza \
+  --i-table results/03_taxonomy/table-filtered.qza \
+  --p-sampling-depth ${SAMPLING_DEPTH} \
+  --m-metadata-file metadata/sample-metadata.tsv \
+  --output-dir results/05_diversity/core-metrics
+
+# Alpha significance (example)
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity results/05_diversity/core-metrics/shannon_vector.qza \
+  --m-metadata-file metadata/sample-metadata.tsv \
+  --o-visualization results/05_diversity/shannon-group.qzv
+</script>
+
+<script type="text/plain" id="code-qiime-alpha-rarefaction">
+# Interactive alpha rarefaction curves (choose max depth from table summary)
+MAX_DEPTH=20000
+
+qiime diversity alpha-rarefaction \
+  --i-table results/03_taxonomy/table-filtered.qza \
+  --i-phylogeny results/04_tree/rooted-tree.qza \
+  --p-max-depth ${MAX_DEPTH} \
+  --m-metadata-file metadata/sample-metadata.tsv \
+  --o-visualization results/05_diversity/alpha-rarefaction.qzv
+</script>
+
+<script type="text/plain" id="code-qiime-permanova">
+qiime diversity beta-group-significance \
+  --i-distance-matrix results/05_diversity/core-metrics/bray_curtis_distance_matrix.qza \
+  --m-metadata-file metadata/sample-metadata.tsv \
+  --m-metadata-column group \
+  --p-method permanova \
+  --p-pairwise \
+  --o-visualization results/05_diversity/bray-permanova-group.qzv
+</script>
+
+<script type="text/plain" id="code-qiime-custom-emperor">
+# Create PCoA and Emperor plot explicitly (when you want custom steps)
+qiime diversity pcoa \
+  --i-distance-matrix results/05_diversity/core-metrics/bray_curtis_distance_matrix.qza \
+  --o-pcoa results/05_diversity/bray_pcoa.qza
+
+qiime emperor plot \
+  --i-pcoa results/05_diversity/bray_pcoa.qza \
+  --m-metadata-file metadata/sample-metadata.tsv \
+  --o-visualization results/05_diversity/bray-emperor-custom.qzv
+</script>
+
+<script type="text/plain" id="code-qiime-ancom">
+qiime composition add-pseudocount \
+  --i-table results/03_taxonomy/table-filtered.qza \
+  --o-composition-table results/06_da/comp-table.qza
+
+qiime composition ancom \
+  --i-table results/06_da/comp-table.qza \
+  --m-metadata-file metadata/sample-metadata.tsv \
+  --m-metadata-column group \
+  --o-visualization results/06_da/ancom-group.qzv
+</script>
+
+<script type="text/plain" id="code-export-qiime-to-r">
+mkdir -p results/99_exports
+
+qiime tools export \
+  --input-path results/03_taxonomy/table-filtered.qza \
+  --output-path results/99_exports/feature-table
+
+qiime tools export \
+  --input-path results/03_taxonomy/taxonomy.qza \
+  --output-path results/99_exports/taxonomy
+
+qiime tools export \
+  --input-path results/04_tree/rooted-tree.qza \
+  --output-path results/99_exports/tree
+
+# BIOM -> TSV (requires biom-format installed)
+biom convert \
+  -i results/99_exports/feature-table/feature-table.biom \
+  -o results/99_exports/feature-table.tsv \
+  --to-tsv
+</script>
+
+<script type="text/plain" id="code-ancombc2">
+library(tidyverse)
+library(phyloseq)
+library(ANCOMBC)
+
+otu <- read.delim("results/99_exports/feature-table.tsv", comment.char="#", row.names=1, check.names=FALSE)
+otu <- as.matrix(otu)
+
+meta <- read.delim("metadata/sample-metadata.tsv", row.names=1, check.names=FALSE)
+OTU <- otu_table(otu, taxa_are_rows=TRUE)
+SAM <- sample_data(meta)
+
+ps <- phyloseq(OTU, SAM)
+
+set.seed(1)
+fit <- ancombc2(data = ps,
+                fix_formula = "group + batch",
+                group = "group",
+                p_adj_method = "BH",
+                prv_cut = 0.10, lib_cut = 1000,
+                struc_zero = TRUE, neg_lb = TRUE,
+                global = TRUE)
+
+write.csv(fit$res$diff_abn, "results/06_da/ancombc2_diff_abn.csv")
+</script>
+
+<script type="text/plain" id="code-ancombc2-plot">
+library(tidyverse)
+
+da <- read.csv("results/06_da/ancombc2_diff_abn.csv", row.names=1)
+# This object structure can vary; adapt to your ANCOMBC output.
+# Example assumes columns contain q-values and log-fold changes:
+# da <- da %>% rownames_to_column("taxon")
+
+# Placeholder plotting template:
+# ggplot(da, aes(x=lfc, y=-log10(qval))) + geom_point() + theme_minimal()
+
+cat("Edit this plotting block to match your ANCOMBC2 output columns.\n")
+</script>
+
+<script type="text/plain" id="code-r-viz-diversity">
+library(tidyverse)
+library(phyloseq)
+library(vegan)
+library(ggplot2)
+
+# Build a minimal phyloseq object from your exported table + metadata.
+otu <- read.delim("results/99_exports/feature-table.tsv", comment.char="#", row.names=1, check.names=FALSE)
+meta <- read.delim("metadata/sample-metadata.tsv", row.names=1, check.names=FALSE)
+
+ps <- phyloseq(otu_table(as.matrix(otu), taxa_are_rows=TRUE),
+               sample_data(meta))
+
+# 1) Alpha diversity (Shannon)
+alpha <- estimate_richness(ps, measures=c("Shannon","Observed"))
+alpha$sample_id <- rownames(alpha)
+alpha <- alpha %>% left_join(meta %>% rownames_to_column("sample_id"), by="sample_id")
+
+ggplot(alpha, aes(x=group, y=Shannon)) +
+  geom_boxplot(outlier.shape=NA) +
+  geom_jitter(width=0.15, height=0, alpha=0.7) +
+  theme_minimal()
+
+# 2) Beta diversity ordination (Bray + PCoA)
+ord <- ordinate(ps, method="PCoA", distance="bray")
+p <- plot_ordination(ps, ord, color="group") + geom_point(size=3) + theme_minimal()
+print(p)
+
+# 3) PERMANOVA (adonis2) + dispersion (betadisper)
+bray <- phyloseq::distance(ps, method="bray")
+meta_df <- data.frame(sample_data(ps))
+
+perm <- adonis2(as.matrix(bray) ~ group + batch, data=meta_df, permutations=999)
+print(perm)
+
+bd <- betadisper(as.dist(bray), meta_df$group)
+print(anova(bd))
+print(permutest(bd, permutations=999))
+</script>
+
+<script type="text/plain" id="code-export-bundle">
+tar -czf results_bundle.tgz results/ metadata/ refs/ scripts/ logs/ 2>/dev/null || true
+qiime tools peek results/02_dada2/table.qza
+</script>
+
+<script>
+  function renderCodeblocks(){
+    document.querySelectorAll(".codeblock").forEach(el => {
+      const src = el.getAttribute("data-src");
+      const node = document.getElementById(src);
+      if(!node) return;
+      const text = node.textContent.replace(/^\n+|\n+$/g, "");
+
+      const pre = document.createElement("pre");
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+
+      const code = document.createElement("code");
+      code.textContent = text;
+
+      btn.addEventListener("click", async () => {
+        try{
+          await navigator.clipboard.writeText(text);
+          const old = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(()=>btn.textContent=old, 900);
+        }catch(e){
+          btn.textContent = "Copy failed";
+          setTimeout(()=>btn.textContent="Copy", 900);
+        }
+      });
+
+      pre.appendChild(btn);
+      pre.appendChild(code);
+      el.appendChild(pre);
+    });
+  }
+
+  function setupSearch(){
+    const input = document.getElementById("search");
+    const topics = () => Array.from(document.querySelectorAll(".topic"));
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      topics().forEach(t => {
+        const kw = (t.getAttribute("data-keywords") || "").toLowerCase();
+        const text = t.innerText.toLowerCase();
+        const show = !q || kw.includes(q) || text.includes(q);
+        t.style.display = show ? "" : "none";
+      });
+    });
+  }
+
+  function setupExpandCollapse(){
+    const allDetails = () => Array.from(document.querySelectorAll("details"));
+    document.getElementById("expandAll").addEventListener("click", () => allDetails().forEach(d => d.open = true));
+    document.getElementById("collapseAll").addEventListener("click", () => allDetails().forEach(d => d.open = false));
+  }
+
+  function setupCopyLink(){
+    const btn = document.getElementById("copyLink");
+    btn.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(window.location.href);
+        const old = btn.textContent;
+        btn.textContent = "Link copied!";
+        setTimeout(()=>btn.textContent=old, 900);
+      }catch(e){
+        btn.textContent = "Copy failed";
+        setTimeout(()=>btn.textContent="Copy page link", 900);
+      }
+    });
+  }
+
+  renderCodeblocks();
+  setupSearch();
+  setupExpandCollapse();
+  setupCopyLink();
+</script>
+</body>
+</html>
