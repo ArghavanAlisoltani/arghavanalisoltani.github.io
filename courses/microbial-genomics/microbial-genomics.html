@@ -1,1 +1,918 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Microbial Genomics Topics + Starter Codes</title>
+  <meta name="description" content="A practical menu of microbial genomics topics with reusable starter commands and scripts." />
 
+  <!-- Optional: syntax highlighting (CDN) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism.min.css">
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e9eefc;
+      --muted:#aab6e8;
+      --accent:#7aa2ff;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.20), transparent 60%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(120,255,200,.12), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{
+      padding:28px 18px 18px;
+      max-width:1100px;
+      margin:0 auto;
+    }
+    .hero{
+      background: linear-gradient(135deg, rgba(122,162,255,.18), rgba(17,26,51,.0));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px 18px;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size: clamp(22px, 4vw, 34px);
+      letter-spacing:.2px;
+    }
+    .subtitle{
+      margin:0 0 12px;
+      color:var(--muted);
+      line-height:1.5;
+      font-size: 15px;
+    }
+    .top-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .search-wrap{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex:1;
+      min-width:240px;
+    }
+    input[type="search"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+    }
+    input[type="search"]::placeholder{color:rgba(233,238,252,.55)}
+    .btn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:600;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.10)}
+    main{
+      max-width:1100px;
+      margin:0 auto;
+      padding: 0 18px 44px;
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:14px;
+    }
+    nav{
+      position:sticky;
+      top:14px;
+      align-self:start;
+      height: calc(100vh - 28px);
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.55);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      padding:12px;
+    }
+    nav h2{
+      font-size:14px;
+      margin:6px 8px 10px;
+      color:var(--muted);
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+    .toc a{
+      display:block;
+      padding:8px 10px;
+      border-radius:12px;
+      color:var(--text);
+      border:1px solid transparent;
+    }
+    .toc a:hover{
+      background: rgba(255,255,255,.06);
+      border-color: var(--border);
+      text-decoration:none;
+    }
+
+    .content{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .card{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.45);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-header{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: rgba(15,23,48,.55);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .card-title{
+      margin:0;
+      font-size:16px;
+      line-height:1.3;
+    }
+    .tag{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      padding:4px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .card-body{
+      padding:14px 16px 16px;
+      color:var(--text);
+      line-height:1.55;
+      font-size: 14.5px;
+    }
+    details{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:10px 12px;
+      margin:10px 0 0;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:700;
+      color:var(--text);
+      list-style:none;
+    }
+    summary::-webkit-details-marker{display:none}
+    summary:before{
+      content:"▸";
+      margin-right:8px;
+      color:var(--muted);
+    }
+    details[open] summary:before{content:"▾"}
+
+    pre{
+      position:relative;
+      margin:12px 0 0;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.28);
+      overflow:auto;
+      padding: 14px 12px 12px;
+    }
+    code{
+      font-family:var(--mono);
+      font-size: 12.8px;
+    }
+    .copy-btn{
+      position:absolute;
+      top:10px;
+      right:10px;
+      padding:6px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:700;
+      font-size:12px;
+      user-select:none;
+    }
+    .copy-btn:hover{background: rgba(255,255,255,.10)}
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+
+    @media (max-width: 980px){
+      main{grid-template-columns:1fr}
+      nav{position:relative; height:auto}
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="hero">
+      <h1>Microbial Genomics Topics + Starter Codes</h1>
+      <p class="subtitle">
+        Save this file as <b>index.html</b> in your GitHub Pages repo root (e.g., <span class="muted">username.github.io</span>),
+        commit + push. Then visit your GitHub Pages URL.
+      </p>
+
+      <div class="top-actions">
+        <div class="search-wrap">
+          <input id="search" type="search" placeholder="Filter topics (e.g., 'pangenome', 'vcf', 'gubbins', 'metagenomics')…" />
+          <button class="btn" id="expandAll">Expand all</button>
+          <button class="btn" id="collapseAll">Collapse all</button>
+        </div>
+        <button class="btn" id="copyLink">Copy page link</button>
+      </div>
+
+      <p class="subtitle small" style="margin-top:10px;">
+        Tip: Each code block has a <b>Copy</b> button. Most sections are collapsible via <b>Show code</b>.
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <nav>
+      <h2>Contents</h2>
+      <div class="toc" id="toc">
+        <a href="#t1">1) Data download (NCBI assemblies) + metadata</a>
+        <a href="#t2">2) Read QC + trimming (Illumina)</a>
+        <a href="#t3">3) Genome assembly (short reads) + eval</a>
+        <a href="#t4">4) Assembly polishing (optional)</a>
+        <a href="#t5">5) Genome annotation (Prokka/Bakta)</a>
+        <a href="#t6">6) Reference-based mapping + SNP calling (VCF)</a>
+        <a href="#t7">7) Multi-sample merging + SNP-distance matrix</a>
+        <a href="#t8">8) Core-genome alignment (Snippy)</a>
+        <a href="#t9">9) Recombination detection / masking</a>
+        <a href="#t10">10) Phylogenetic tree inference</a>
+        <a href="#t11">11) Pangenome analysis</a>
+        <a href="#t12">12) Gene presence/absence association (bGWAS)</a>
+        <a href="#t13">13) AMR gene detection + summary</a>
+        <a href="#t14">14) Plasmids, phage, mobile elements</a>
+        <a href="#t15">15) Metagenomics: taxonomic profiling</a>
+        <a href="#t16">16) Metagenome assembly + binning + QC</a>
+        <a href="#t17">17) RNA-seq for bacteria (expression + DE)</a>
+        <a href="#t18">18) Outbreak investigation basics (SNP clustering)</a>
+        <a href="#t19">19) Workflow automation (Snakemake skeleton)</a>
+        <a href="#t20">20) ML optional: k-mer classifier starter</a>
+      </div>
+    </nav>
+
+    <section class="content" id="content">
+
+      <!-- 1 -->
+      <article class="card topic" id="t1" data-keywords="ncbi datasets download assembly gff gbff protein metadata">
+        <div class="card-header">
+          <h3 class="card-title">1) Data download (NCBI assemblies) + metadata</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Goal: reproducible genome retrieval.</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash"># Download assemblies (FASTA + GFF) with NCBI datasets CLI
+mkdir -p data/ncbi &amp;&amp; cd data/ncbi
+
+# accessions.txt = one GCF_/GCA_ per line
+while read -r acc; do
+  echo "==&gt; $acc"
+  datasets download genome accession "$acc" \
+    --include genome,gff3,gbff,protein \
+    --filename "${acc}.zip" || { echo "FAILED $acc"; continue; }
+
+  unzip -o "${acc}.zip" -d "${acc}" &gt;/dev/null
+done &lt; ../../accessions.txt</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 2 -->
+      <article class="card topic" id="t2" data-keywords="qc trimming fastp fastqc multiqc illumina reads">
+        <div class="card-header">
+          <h3 class="card-title">2) Read QC + trimming (Illumina)</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: fastp, fastqc, multiqc</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">mkdir -p qc/fastp qc/fastqc
+for r1 in reads/*_R1.fastq.gz; do
+  r2="${r1/_R1/_R2}"
+  sample=$(basename "$r1" _R1.fastq.gz)
+
+  fastp -i "$r1" -I "$r2" \
+    -o "qc/fastp/${sample}_R1.trim.fq.gz" \
+    -O "qc/fastp/${sample}_R2.trim.fq.gz" \
+    --html "qc/fastp/${sample}.html" --json "qc/fastp/${sample}.json"
+done
+
+fastqc -o qc/fastqc qc/fastp/*.fq.gz
+multiqc -o qc/multiqc qc/fastp qc/fastqc</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 3 -->
+      <article class="card topic" id="t3" data-keywords="assembly spades quast contigs short reads">
+        <div class="card-header">
+          <h3 class="card-title">3) Genome assembly (short reads) + eval</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: spades.py, quast</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">mkdir -p assembly quast
+for r1 in qc/fastp/*_R1.trim.fq.gz; do
+  r2="${r1/_R1/_R2}"
+  s=$(basename "$r1" _R1.trim.fq.gz)
+
+  spades.py -1 "$r1" -2 "$r2" -o "assembly/$s" --careful -t 8 -m 32
+  quast.py "assembly/$s/contigs.fasta" -o "quast/$s" -t 8
+done</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 4 -->
+      <article class="card topic" id="t4" data-keywords="polish pilon bwa mem2 samtools polishing">
+        <div class="card-header">
+          <h3 class="card-title">4) Assembly polishing (optional)</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: bwa-mem2, samtools, pilon</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">bwa-mem2 index assembly/S1/contigs.fasta
+bwa-mem2 mem -t 8 assembly/S1/contigs.fasta qc/fastp/S1_R1.trim.fq.gz qc/fastp/S1_R2.trim.fq.gz \
+  | samtools sort -@ 4 -o S1.bam
+samtools index S1.bam
+
+pilon --genome assembly/S1/contigs.fasta --frags S1.bam --output S1.pilon --threads 8</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 5 -->
+      <article class="card topic" id="t5" data-keywords="annotation bakta prokka gff proteins genes">
+        <div class="card-header">
+          <h3 class="card-title">5) Genome annotation (Prokka/Bakta)</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tool: bakta (convenient), or prokka</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">mkdir -p annotation/bakta
+for fa in assembly/*/contigs.fasta; do
+  s=$(basename "$(dirname "$fa")")
+  bakta --output "annotation/bakta/$s" --prefix "$s" --threads 8 "$fa"
+done</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 6 -->
+      <article class="card topic" id="t6" data-keywords="mapping bwa mem2 bcftools vcf snp indel reference">
+        <div class="card-header">
+          <h3 class="card-title">6) Reference-based mapping + SNP/indel calling (VCF)</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: bwa-mem2, samtools, bcftools</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">ref=ref/PAO1.fasta
+bwa-mem2 index "$ref"
+samtools faidx "$ref"
+
+mkdir -p vcf bam
+for r1 in qc/fastp/*_R1.trim.fq.gz; do
+  r2="${r1/_R1/_R2}"
+  s=$(basename "$r1" _R1.trim.fq.gz)
+
+  bwa-mem2 mem -t 8 "$ref" "$r1" "$r2" | samtools sort -@ 4 -o "bam/$s.bam"
+  samtools index "bam/$s.bam"
+
+  bcftools mpileup -Ou -f "$ref" "bam/$s.bam" \
+    | bcftools call -mv -Ou \
+    | bcftools filter -i 'QUAL&gt;30 &amp;&amp; DP&gt;10' -Oz -o "vcf/$s.vcf.gz"
+  bcftools index "vcf/$s.vcf.gz"
+done</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 7 -->
+      <article class="card topic" id="t7" data-keywords="merge vcf bcftools snp distance python cyvcf2">
+        <div class="card-header">
+          <h3 class="card-title">7) Multi-sample merging + quick SNP-distance matrix</h3>
+          <span class="tag">Bash + Python</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Merge VCFs + compute pairwise SNP differences ignoring missing calls.</div>
+
+          <details>
+            <summary>Show code (merge VCFs)</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">bcftools merge vcf/*.vcf.gz -Oz -o cohort.merged.vcf.gz
+bcftools index cohort.merged.vcf.gz</code></pre>
+          </details>
+
+          <details>
+            <summary>Show code (Python SNP distance)</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-python">import cyvcf2
+import numpy as np
+from itertools import combinations
+
+vcf = cyvcf2.VCF("cohort.merged.vcf.gz")
+samples = vcf.samples
+gt = []
+
+for v in vcf:
+    g = v.genotypes  # [ [a1,a2,phased], ... ]
+    # treat any non-ref as 1, ref/ref as 0, missing as np.nan
+    row = []
+    for a1, a2, _ in g:
+        if a1 &lt; 0 or a2 &lt; 0:
+            row.append(np.nan)
+        else:
+            row.append(0 if (a1 == 0 and a2 == 0) else 1)
+    gt.append(row)
+
+G = np.array(gt, dtype=float)  # variants x samples
+
+# pairwise SNP differences ignoring missing
+n = len(samples)
+D = np.zeros((n, n), dtype=int)
+for i, j in combinations(range(n), 2):
+    mask = ~np.isnan(G[:, i]) &amp; ~np.isnan(G[:, j])
+    D[i, j] = D[j, i] = int(np.sum(G[mask, i] != G[mask, j]))
+
+print("samples:", samples)
+print(D)</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 8 -->
+      <article class="card topic" id="t8" data-keywords="snippy snippy-core core genome alignment">
+        <div class="card-header">
+          <h3 class="card-title">8) Core-genome alignment (Snippy workflow)</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: snippy, snippy-core</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash"># After running snippy per-sample:
+snippy-core --ref ref/PAO1.fasta --prefix core snippy_out/*
+# outputs: core.full.aln, core.aln, core.vcf, etc.</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 9 -->
+      <article class="card topic" id="t9" data-keywords="recombination gubbins clonalframeml masking phylogenomics">
+        <div class="card-header">
+          <h3 class="card-title">9) Recombination detection / masking (bacterial phylogenomics)</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: gubbins or ClonalFrameML</div>
+          <details>
+            <summary>Show code (Gubbins)</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">run_gubbins.py --prefix gubbins core.full.aln
+# recombination-masked alignment typically: gubbins.filtered_polymorphic_sites.fasta (varies by version)</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 10 -->
+      <article class="card topic" id="t10" data-keywords="phylogeny iqtree2 tree bootstrap gtr">
+        <div class="card-header">
+          <h3 class="card-title">10) Phylogenetic tree inference</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tool: IQ-TREE (fast, common)</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">iqtree2 -s core.full.aln -m GTR+G -B 1000 -T AUTO
+# outputs .treefile, .log, bootstrap supports, etc.</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 11 -->
+      <article class="card topic" id="t11" data-keywords="pangenome panaroo core accessory genes gff">
+        <div class="card-header">
+          <h3 class="card-title">11) Pangenome analysis (core/accessory genes)</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tool: panaroo</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash"># input: GFF3 files (from Prokka/Bakta)
+panaroo -i annotation/*/*.gff3 -o panaroo_out \
+  --clean-mode strict --remove-invalid-genes --merge_paralogs \
+  -t 12</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 12 -->
+      <article class="card topic" id="t12" data-keywords="pyseer scoary bgwas association phenotype gene presence absence">
+        <div class="card-header">
+          <h3 class="card-title">12) Gene presence/absence association (bacterial GWAS)</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tool: pyseer (example)</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash"># Example idea: pyseer with gene presence/absence + phenotype
+pyseer --phenotypes phenotype.tsv \
+  --pres panaroo_out/gene_presence_absence.Rtab \
+  --distances core_dist.tsv \
+  --cpu 8 &gt; pyseer_genes.txt</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 13 -->
+      <article class="card topic" id="t13" data-keywords="amr amrfinder abricate resistance summary python">
+        <div class="card-header">
+          <h3 class="card-title">13) AMR gene detection + summary table</h3>
+          <span class="tag">Bash + Python</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: amrfinder (or abricate). Then merge outputs into a CSV summary.</div>
+
+          <details>
+            <summary>Show code (AMRFinder per-sample)</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">mkdir -p amr
+for fa in assembly/*/contigs.fasta; do
+  s=$(basename "$(dirname "$fa")")
+  amrfinder -n "$fa" -o "amr/${s}.amrfinder.tsv"
+done</code></pre>
+          </details>
+
+          <details>
+            <summary>Show code (Python merge summary)</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-python">import pandas as pd, glob, os
+
+rows=[]
+for f in glob.glob("amr/*.amrfinder.tsv"):
+    s=os.path.basename(f).split(".")[0]
+    df=pd.read_csv(f, sep="\t")
+    if df.empty:
+        rows.append({"sample": s, "amr_hits": 0})
+    else:
+        rows.append({
+            "sample": s,
+            "amr_hits": len(df),
+            "top_genes": ",".join(df["Gene symbol"].head(5).astype(str))
+        })
+
+out=pd.DataFrame(rows).fillna("")
+out.to_csv("amr_summary.csv", index=False)
+print(out.head())</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 14 -->
+      <article class="card topic" id="t14" data-keywords="plasmid phage mobile elements mob-suite isescan">
+        <div class="card-header">
+          <h3 class="card-title">14) Plasmids, phage, mobile elements</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: mob-suite, plasmidfinder, PHASTER (web), ISEScan (IS)</div>
+          <details>
+            <summary>Show code (MOB-suite)</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash"># MOB-suite example (plasmid typing)
+mob_recon --infile assembly/S1/contigs.fasta --outdir mob/S1 --run_typer --threads 8</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 15 -->
+      <article class="card topic" id="t15" data-keywords="metagenomics kraken2 bracken taxonomy profiling">
+        <div class="card-header">
+          <h3 class="card-title">15) Metagenomics: taxonomic profiling</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: kraken2 + bracken</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">kraken2 --db /path/kraken_db --paired sample_R1.fq.gz sample_R2.fq.gz \
+  --report sample.kraken.report --output sample.kraken.out
+
+bracken -d /path/kraken_db -i sample.kraken.report -o sample.bracken.species -l S</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 16 -->
+      <article class="card topic" id="t16" data-keywords="metagenome assembly binning metaspades metabat2 checkm2">
+        <div class="card-header">
+          <h3 class="card-title">16) Metagenome assembly + binning + QC</h3>
+          <span class="tag">Bash</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: metaspades, metabat2, checkm2</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash">metaspades.py -1 R1.fq.gz -2 R2.fq.gz -o meta_asm -t 16 -m 128
+jgi_summarize_bam_contig_depths --outputDepth depth.txt *.bam
+metabat2 -i meta_asm/contigs.fasta -a depth.txt -o bins/bin -t 16
+checkm2 predict --input bins --output-directory checkm2_out --threads 16</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 17 -->
+      <article class="card topic" id="t17" data-keywords="rnaseq salmon deseq2 expression differential bacteria">
+        <div class="card-header">
+          <h3 class="card-title">17) RNA-seq for bacteria (expression + DE)</h3>
+          <span class="tag">Bash + R</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Tools: salmon + DESeq2</div>
+
+          <details>
+            <summary>Show code (Salmon quant)</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-bash"># salmon quant (after building index from transcripts)
+salmon quant -i tx_index -l A \
+  -1 sample_R1.fq.gz -2 sample_R2.fq.gz \
+  -p 8 -o salmon/sample</code></pre>
+          </details>
+
+          <details>
+            <summary>Show code (DESeq2 skeleton)</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-r"># DESeq2 skeleton
+library(DESeq2)
+cts &lt;- read.csv("counts.csv", row.names=1)
+coldata &lt;- read.csv("coldata.csv", row.names=1)
+dds &lt;- DESeqDataSetFromMatrix(countData=cts, colData=coldata, design=~ condition)
+dds &lt;- DESeq(dds)
+res &lt;- results(dds)
+write.csv(as.data.frame(res), "deseq2_results.csv")</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 18 -->
+      <article class="card topic" id="t18" data-keywords="outbreak snp clustering distance threshold connected components">
+        <div class="card-header">
+          <h3 class="card-title">18) Outbreak investigation basics (SNP clustering)</h3>
+          <span class="tag">Python</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Goal: flag near-identical isolates with a simple threshold-based cluster.</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-python">import pandas as pd
+
+# D: square SNP distance matrix (csv) with same row/col names
+D = pd.read_csv("snp_dist.csv", index_col=0)
+threshold = 5  # e.g., &lt;=5 SNPs might be “same cluster” depending on organism
+
+# simple connected-components clustering
+samples = list(D.index)
+adj = {s:set() for s in samples}
+for s in samples:
+    close = D.columns[(D.loc[s] &lt;= threshold).values]
+    for t in close:
+        if s != t:
+            adj[s].add(t)
+
+seen=set()
+clusters=[]
+for s in samples:
+    if s in seen:
+        continue
+    stack=[s]
+    comp=set()
+    while stack:
+        x=stack.pop()
+        if x in comp:
+            continue
+        comp.add(x)
+        stack.extend(list(adj[x]))
+    seen |= comp
+    clusters.append(sorted(comp))
+
+print("clusters:", clusters)</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 19 -->
+      <article class="card topic" id="t19" data-keywords="snakemake workflow automation pipeline reproducible">
+        <div class="card-header">
+          <h3 class="card-title">19) Workflow automation (Snakemake mini-skeleton)</h3>
+          <span class="tag">Snakemake</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Minimal skeleton to automate per-sample variant calling.</div>
+          <details>
+            <summary>Show code (Snakefile)</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-python"># Snakefile
+SAMPLES = [s.strip() for s in open("samples.txt")]
+
+rule all:
+    input:
+        expand("vcf/{s}.vcf.gz", s=SAMPLES)
+
+rule call_variants:
+    input:
+        r1="qc/fastp/{s}_R1.trim.fq.gz",
+        r2="qc/fastp/{s}_R2.trim.fq.gz",
+        ref="ref/PAO1.fasta"
+    output:
+        "vcf/{s}.vcf.gz"
+    shell:
+        r"""
+        bwa-mem2 mem -t 8 {input.ref} {input.r1} {input.r2} | samtools sort -o {wildcards.s}.bam
+        samtools index {wildcards.s}.bam
+        bcftools mpileup -Ou -f {input.ref} {wildcards.s}.bam | bcftools call -mv -Oz -o {output}
+        bcftools index {output}
+        """</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <!-- 20 -->
+      <article class="card topic" id="t20" data-keywords="machine learning ml kmer classifier logistic regression sklearn">
+        <div class="card-header">
+          <h3 class="card-title">20) ML optional: k-mer classifier starter</h3>
+          <span class="tag">Python</span>
+        </div>
+        <div class="card-body">
+          <div class="muted">Quick baseline for sequence classification using k-mers + Logistic Regression.</div>
+          <details>
+            <summary>Show code</summary>
+            <pre><button class="copy-btn">Copy</button><code class="language-python">from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+
+def kmers(seq, k=6):
+    return " ".join(seq[i:i+k] for i in range(len(seq)-k+1))
+
+# sequences = list of strings; labels = 0/1
+X = [kmers(s, 6) for s in sequences]
+vec = CountVectorizer(min_df=2)
+Xv = vec.fit_transform(X)
+
+Xtr, Xte, ytr, yte = train_test_split(
+    Xv, labels, test_size=0.2, random_state=0, stratify=labels
+)
+clf = LogisticRegression(max_iter=2000)
+clf.fit(Xtr, ytr)
+print(classification_report(yte, clf.predict(Xte)))</code></pre>
+          </details>
+        </div>
+      </article>
+
+      <footer class="card">
+        <div class="card-body">
+          <div class="muted">
+            If you want, I can also generate a version with:
+            a left “pipeline builder” (checkboxes) + auto-generated command list,
+            or a dark/light toggle + downloadable ZIP structure.
+          </div>
+        </div>
+      </footer>
+
+    </section>
+  </main>
+
+  <!-- Prism.js (optional highlighting) -->
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-r.min.js"></script>
+
+  <script>
+    // Copy buttons for code blocks
+    function setupCopyButtons() {
+      document.querySelectorAll('pre').forEach(pre => {
+        const btn = pre.querySelector('.copy-btn');
+        const code = pre.querySelector('code');
+        if (!btn || !code) return;
+
+        btn.addEventListener('click', async () => {
+          try {
+            const text = code.innerText;
+            await navigator.clipboard.writeText(text);
+            const old = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => (btn.textContent = old), 900);
+          } catch (e) {
+            btn.textContent = 'Copy failed';
+            setTimeout(() => (btn.textContent = 'Copy'), 900);
+          }
+        });
+      });
+    }
+
+    // Search / filter topics
+    function setupSearch() {
+      const input = document.getElementById('search');
+      const topics = Array.from(document.querySelectorAll('.topic'));
+      input.addEventListener('input', () => {
+        const q = input.value.trim().toLowerCase();
+        topics.forEach(t => {
+          const kw = (t.getAttribute('data-keywords') || '').toLowerCase();
+          const text = t.innerText.toLowerCase();
+          const show = !q || kw.includes(q) || text.includes(q);
+          t.style.display = show ? '' : 'none';
+        });
+      });
+    }
+
+    // Expand/collapse all details
+    function setupExpandCollapse() {
+      const allDetails = () => Array.from(document.querySelectorAll('details'));
+      document.getElementById('expandAll').addEventListener('click', () => {
+        allDetails().forEach(d => d.open = true);
+      });
+      document.getElementById('collapseAll').addEventListener('click', () => {
+        allDetails().forEach(d => d.open = false);
+      });
+    }
+
+    // Copy page link
+    function setupCopyLink() {
+      const btn = document.getElementById('copyLink');
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          const old = btn.textContent;
+          btn.textContent = 'Link copied!';
+          setTimeout(() => (btn.textContent = old), 900);
+        } catch (e) {
+          btn.textContent = 'Copy failed';
+          setTimeout(() => (btn.textContent = 'Copy page link'), 900);
+        }
+      });
+    }
+
+    // Smooth scroll for TOC
+    function setupSmoothScroll() {
+      document.querySelectorAll('.toc a').forEach(a => {
+        a.addEventListener('click', (e) => {
+          const href = a.getAttribute('href');
+          if (!href || !href.startsWith('#')) return;
+          const target = document.querySelector(href);
+          if (!target) return;
+          e.preventDefault();
+          target.scrollIntoView({behavior:'smooth', block:'start'});
+          history.pushState(null, '', href);
+        });
+      });
+    }
+
+    setupCopyButtons();
+    setupSearch();
+    setupExpandCollapse();
+    setupCopyLink();
+    setupSmoothScroll();
+  </script>
+</body>
+</html>
