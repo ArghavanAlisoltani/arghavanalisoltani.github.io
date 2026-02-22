@@ -1,1 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Research Papers & Tools | Microbial + Viral Genomics</title>
+  <meta name="description" content="Papers, webtools, and software mentioned across ViralVar, FGT-DB, and Coronavirus3D, plus under-development projects." />
 
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e9eefc;
+      --muted:#aab6e8;
+      --accent:#7aa2ff;
+      --accent2:#70ffd1;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.20), transparent 60%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(112,255,209,.12), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{
+      padding:28px 18px 18px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+    .hero{
+      background: linear-gradient(135deg, rgba(122,162,255,.18), rgba(17,26,51,.0));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px 18px;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size: clamp(22px, 4vw, 34px);
+      letter-spacing:.2px;
+    }
+    .subtitle{
+      margin:0 0 12px;
+      color:var(--muted);
+      line-height:1.55;
+      font-size: 15px;
+    }
+    .top-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .search-wrap{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex:1;
+      min-width:240px;
+    }
+    input[type="search"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+    }
+    input[type="search"]::placeholder{color:rgba(233,238,252,.55)}
+    .btn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.10)}
+    main{
+      max-width:1200px;
+      margin:0 auto;
+      padding: 0 18px 44px;
+      display:grid;
+      grid-template-columns: 300px 1fr;
+      gap:14px;
+    }
+    nav{
+      position:sticky;
+      top:14px;
+      align-self:start;
+      height: calc(100vh - 28px);
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.55);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      padding:12px;
+    }
+    nav h2{
+      font-size:14px;
+      margin:6px 8px 10px;
+      color:var(--muted);
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+    .toc a{
+      display:block;
+      padding:8px 10px;
+      border-radius:12px;
+      color:var(--text);
+      border:1px solid transparent;
+    }
+    .toc a:hover{
+      background: rgba(255,255,255,.06);
+      border-color: var(--border);
+      text-decoration:none;
+    }
+    .content{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .card{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.45);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-header{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: rgba(15,23,48,.55);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .card-title{
+      margin:0;
+      font-size:16px;
+      line-height:1.35;
+    }
+    .tag{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      padding:4px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .card-body{
+      padding:14px 16px 16px;
+      color:var(--text);
+      line-height:1.6;
+      font-size: 14.5px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    .paper-links{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      font-weight:700;
+      font-size:13px;
+    }
+    .pill:hover{background: rgba(255,255,255,.10); text-decoration:none}
+    .pill small{font-weight:700; color:var(--muted)}
+    .chips{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      font-size:13px;
+      line-height:1;
+    }
+    .chip .kind{
+      font-size:11px;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      background: rgba(0,0,0,.15);
+    }
+    .chip:hover{background: rgba(255,255,255,.08); text-decoration:none}
+    details{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:10px 12px;
+      margin:12px 0 0;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:800;
+      color:var(--text);
+      list-style:none;
+    }
+    summary::-webkit-details-marker{display:none}
+    summary:before{
+      content:"▸";
+      margin-right:8px;
+      color:var(--muted);
+    }
+    details[open] summary:before{content:"▾"}
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .kicker{
+      color: var(--accent2);
+      font-weight:800;
+      letter-spacing:.25px;
+      text-transform:uppercase;
+      font-size:12px;
+    }
+    .tool-list{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+    .tool-card{
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: rgba(0,0,0,.22);
+      padding:10px 12px;
+    }
+    .tool-name{
+      font-weight:900;
+      margin:0 0 6px;
+      font-size:14px;
+    }
+    .tool-meta{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.45;
+    }
+    @media (max-width: 980px){
+      main{grid-template-columns:1fr}
+      nav{position:relative; height:auto}
+      .tool-list{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="hero">
+    <h1>Papers, Tools & Web Resources</h1>
+    <p class="subtitle">
+      A GitHub Pages index built from three papers: <b>ViralVar</b>, <b>FGT-DB</b>, and <b>Coronavirus3D</b>.
+      It includes direct links to paper PDFs (stored in <span class="muted">/papers/</span>) and the software/tools mentioned in each paper.
+    </p>
+    <div class="top-actions">
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Filter tools (e.g., 'Shiny', 'MaxQuant', 'GISAID', 'r3dmol', 'DADA2')…" />
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+      <button class="btn" id="copyLink">Copy page link</button>
+    </div>
+    <p class="subtitle small" style="margin-top:10px;">
+      <b>Setup:</b> Add PDFs to <span class="muted">/papers/</span> with these names:
+      <span class="muted">Alisoltani_ViralVar-viruses-2022.pdf</span>,
+      <span class="muted">Alisoltani_FGTDB_Microbiome_2020.pdf</span>,
+      <span class="muted">Alisoltani_Coronavirus3D_bioinformatics_2020.pdf</span>.
+    </p>
+  </div>
+</header>
+
+<main>
+  <nav>
+    <h2>Contents</h2>
+    <div class="toc">
+      <a href="#papers">Papers</a>
+      <a href="#tools">Tools index (all papers)</a>
+      <a href="#underdev">Unpublished / Under development</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <h2 style="margin-top:16px;">Quick links</h2>
+    <div class="toc">
+      <a href="#viralvar">ViralVar paper</a>
+      <a href="#fgtdb">FGT-DB paper</a>
+      <a href="#coronavirus3d">Coronavirus3D paper</a>
+    </div>
+  </nav>
+
+  <section class="content" id="content">
+
+    <!-- PAPERS -->
+    <article class="card" id="papers">
+      <div class="card-header">
+        <h3 class="card-title">Papers</h3>
+        <span class="tag">PDFs + external links</span>
+      </div>
+      <div class="card-body">
+        <div class="muted">Each card includes: local PDF link (GitHub Pages), DOI/journal link, and the tool stack highlighted in the paper.</div>
+      </div>
+    </article>
+
+    <!-- ViralVar -->
+    <article class="card topic" id="viralvar" data-keywords="viralvar sars-cov-2 shiny r3dmol ggplot2 plotly gisaid nextstrain binomial kmeans nbclust">
+      <div class="card-header">
+        <h3 class="card-title">ViralVar (Viruses, 2022): Multilevel visualization of SARS-CoV-2 genomes</h3>
+        <span class="tag">Webtool (R Shiny)</span>
+      </div>
+      <div class="card-body">
+        <div class="kicker">What it is</div>
+        <div>
+          ViralVar is a point-and-click web application to explore lineage dynamics and mutational/structural context of SARS-CoV-2,
+          using user-selected subsets of genomes (e.g., from GISAID).
+        </div>
+
+        <div class="paper-links">
+          <a class="pill" href="papers/Alisoltani_ViralVar-viruses-2022.pdf" target="_blank" rel="noopener">
+            PDF <small>(local)</small>
+          </a>
+          <a class="pill" href="https://doi.org/10.3390/v14122714" target="_blank" rel="noopener">
+            DOI <small>(journal)</small>
+          </a>
+          <a class="pill" href="http://viralvar.org/" target="_blank" rel="noopener">
+            ViralVar webserver <small>(live)</small>
+          </a>
+        </div>
+
+        <details open>
+          <summary>Tools & resources mentioned in the paper</summary>
+          <div class="chips" id="chips-viralvar"></div>
+          <p class="muted small" style="margin-top:10px;">
+            Includes: data sources (GISAID), lineage visualization (Shiny/ggplot2), interactive plots (plotly),
+            3D mutation mapping (r3dmol + PDB/AlphaFold), epitope prediction (IEDB/BepiPred), and clustering/statistics (k-means, NbClust, binomial tests).
+          </p>
+        </details>
+      </div>
+    </article>
+
+    <!-- FGT-DB -->
+    <article class="card topic" id="fgtdb" data-keywords="fgtdb metaproteomics maxquant metanovo uniprot limma randomforest wgcna dada2 silva piphillin kegg revigo">
+      <div class="card-header">
+        <h3 class="card-title">FGT-DB paper (Microbiome, 2020): Microbial function & genital inflammation</h3>
+        <span class="tag">Metaproteomics + 16S</span>
+      </div>
+      <div class="card-body">
+        <div class="kicker">What it is</div>
+        <div>
+          This study uses LC-MS/MS metaproteomics and 16S rRNA profiling to link microbial functions to genital inflammatory cytokine profiles,
+          and introduces the FGT-DB application to explore the dataset.
+        </div>
+
+        <div class="paper-links">
+          <a class="pill" href="papers/Alisoltani_FGTDB_Microbiome_2020.pdf" target="_blank" rel="noopener">
+            PDF <small>(local)</small>
+          </a>
+          <a class="pill" href="https://doi.org/10.1186/s40168-020-00932-8" target="_blank" rel="noopener">
+            DOI <small>(journal)</small>
+          </a>
+          <a class="pill" href="http://fgtdb.org/" target="_blank" rel="noopener">
+            FGT-DB web app <small>(live)</small>
+          </a>
+        </div>
+
+        <details open>
+          <summary>Tools & resources mentioned in the paper</summary>
+          <div class="chips" id="chips-fgtdb"></div>
+          <p class="muted small" style="margin-top:10px;">
+            Includes: MaxQuant + MetaNovo/UniProt for protein ID, limma/randomForest/WGCNA for analysis,
+            DADA2 + SILVA for 16S, Piphillin + KEGG for function prediction, and REVIGO for GO summarization.
+          </p>
+        </details>
+      </div>
+    </article>
+
+    <!-- Coronavirus3D -->
+    <article class="card topic" id="coronavirus3d" data-keywords="coronavirus3d structure pdb 3dmoljs modeller ffas protael cncb gisaid nextstrain">
+      <div class="card-header">
+        <h3 class="card-title">Coronavirus3D (Bioinformatics, 2020): 3D visualization of COVID-19 genomic divergence</h3>
+        <span class="tag">Structural bioinformatics</span>
+      </div>
+      <div class="card-body">
+        <div class="kicker">What it is</div>
+        <div>
+          Coronavirus3D integrates SARS-CoV-2 mutation data with 3D protein structures/models so users can inspect mutations in structural context.
+        </div>
+
+        <div class="paper-links">
+          <a class="pill" href="papers/Alisoltani_Coronavirus3D_bioinformatics_2020.pdf" target="_blank" rel="noopener">
+            PDF <small>(local)</small>
+          </a>
+          <a class="pill" href="https://coronavirus3d.org/" target="_blank" rel="noopener">
+            Coronavirus3D server <small>(live)</small>
+          </a>
+        </div>
+
+        <details open>
+          <summary>Tools & resources mentioned in the paper</summary>
+          <div class="chips" id="chips-coronavirus3d"></div>
+          <p class="muted small" style="margin-top:10px;">
+            Includes: PDB structures, CNCB mutation data, 3D visualization via 3Dmol.js, modeling with MODELLER, and fold-recognition via FFAS alignments.
+          </p>
+        </details>
+      </div>
+    </article>
+
+    <!-- TOOLS INDEX -->
+    <article class="card" id="tools">
+      <div class="card-header">
+        <h3 class="card-title">Tools index (across all papers)</h3>
+        <span class="tag">Searchable</span>
+      </div>
+      <div class="card-body">
+        <div class="muted">Use the search box at the top to filter by tool name or keyword.</div>
+
+        <details open>
+          <summary>Webservers & online resources</summary>
+          <div class="tool-list" id="tool-web"></div>
+        </details>
+
+        <details>
+          <summary>Databases & repositories</summary>
+          <div class="tool-list" id="tool-db"></div>
+        </details>
+
+        <details>
+          <summary>Software & packages</summary>
+          <div class="tool-list" id="tool-soft"></div>
+        </details>
+
+        <details>
+          <summary>Analysis methods (named in papers)</summary>
+          <div class="tool-list" id="tool-methods"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- UNDER DEVELOPMENT -->
+    <article class="card" id="underdev">
+      <div class="card-header">
+        <h3 class="card-title">Unpublished / Under development</h3>
+        <span class="tag">WIP</span>
+      </div>
+      <div class="card-body">
+        <div class="muted">Links you provided (marked as under development):</div>
+        <div class="paper-links" style="margin-top:12px;">
+          <a class="pill" href="https://metaprot.org/" target="_blank" rel="noopener">MetaProt <small>(metaprot.org)</small></a>
+          <a class="pill" href="https://bacterialvar.org/" target="_blank" rel="noopener">BacterialVar <small>(bacterialvar.org)</small></a>
+        </div>
+        <p class="muted small" style="margin-top:12px;">
+          Tip: You can add a short “status” line here later (e.g., “alpha”, “beta”, “private demo”) and a contact email or GitHub repo link.
+        </p>
+      </div>
+    </article>
+
+    <!-- CONTACT -->
+    <article class="card" id="contact">
+      <div class="card-header">
+        <h3 class="card-title">Contact</h3>
+        <span class="tag">Optional</span>
+      </div>
+      <div class="card-body">
+        <div class="muted">
+          Add your preferred contact links here (email / Google Scholar / GitHub / ORCID / lab page).
+        </div>
+        <div class="paper-links" style="margin-top:12px;">
+          <a class="pill" href="https://aria.github.io/" target="_blank" rel="noopener">Home <small>(aria.github.io)</small></a>
+        </div>
+      </div>
+    </article>
+
+  </section>
+</main>
+
+<script>
+  // -------------------------------
+  // 1) Data: tools mentioned in papers
+  // -------------------------------
+  const tools = [
+    // ViralVar paper
+    {name:"ViralVar", url:"http://viralvar.org/", category:"web", usedIn:["ViralVar (2022)"], note:"SARS-CoV-2 lineage + mutation visualization web app"},
+    {name:"R Shiny", url:"https://shiny.posit.co/", category:"soft", usedIn:["ViralVar (2022)"], note:"Interactive web apps in R"},
+    {name:"Bootstrap", url:"https://getbootstrap.com/", category:"soft", usedIn:["ViralVar (2022)"], note:"UI layout framework (via Shiny)"},
+    {name:"ggplot2", url:"https://cran.r-project.org/package=ggplot2", category:"soft", usedIn:["ViralVar (2022)"], note:"Plots (area/stacked bars/density)"},
+    {name:"plotly (R)", url:"https://plotly.com/r/", category:"soft", usedIn:["ViralVar (2022)"], note:"Interactive protein mutation plots"},
+    {name:"r3dmol", url:"https://cran.r-project.org/package=r3dmol", category:"soft", usedIn:["ViralVar (2022)"], note:"3D structure visualization in R"},
+    {name:"NbClust", url:"https://cran.r-project.org/package=NbClust", category:"soft", usedIn:["ViralVar (2022)"], note:"Cluster number selection (silhouette/ASW)"},
+    {name:"maps (R)", url:"https://cran.r-project.org/package=maps", category:"soft", usedIn:["ViralVar (2022)"], note:"Base maps"},
+    {name:"scatterpie (R)", url:"https://cran.r-project.org/package=scatterpie", category:"soft", usedIn:["ViralVar (2022)"], note:"Pie charts over maps"},
+    {name:"GISAID", url:"https://gisaid.org/", category:"db", usedIn:["ViralVar (2022)","Coronavirus3D (2020)"], note:"Global SARS-CoV-2 genome repository (registration required)"},
+    {name:"Nextstrain", url:"https://nextstrain.org/", category:"web", usedIn:["ViralVar (2022)","Coronavirus3D (2020)"], note:"Real-time pathogen evolution tracking"},
+    {name:"IEDB (BepiPred 2.0)", url:"http://www.iedb.org/", category:"web", usedIn:["ViralVar (2022)"], note:"B-cell epitope prediction used for protein annotation"},
+    {name:"Protein Data Bank (PDB)", url:"https://www.rcsb.org/", category:"db", usedIn:["ViralVar (2022)","Coronavirus3D (2020)"], note:"3D structures"},
+    {name:"AlphaFold (models)", url:"https://alphafold.ebi.ac.uk/", category:"web", usedIn:["ViralVar (2022)"], note:"Predicted models when no experimental structure"},
+    {name:"TMHMM 2.0", url:"https://services.healthtech.dtu.dk/service.php?TMHMM-2.0", category:"web", usedIn:["ViralVar (2022)"], note:"Transmembrane helix prediction"},
+    // VirusViz / CoV-GLUE / covariants etc (mentioned in ViralVar intro as related tools)
+    {name:"CoV-GLUE", url:"http://cov-glue.cvr.gla.ac.uk/", category:"web", usedIn:["ViralVar (2022)"], note:"Related SARS-CoV-2 variation tracker (mentioned)"},
+    {name:"CoVariants", url:"https://covariants.org/", category:"web", usedIn:["ViralVar (2022)"], note:"Variant/mutation tracker (mentioned)"},
+    {name:"outbreak.info", url:"https://outbreak.info/", category:"web", usedIn:["ViralVar (2022)"], note:"Variant reporting (mentioned)"},
+    {name:"CoV3D", url:"https://cov3d.ibbr.umd.edu/", category:"web", usedIn:["ViralVar (2022)"], note:"Coronavirus 3D structure database (mentioned)"},
+
+    // FGT-DB paper
+    {name:"FGT-DB", url:"http://fgtdb.org/", category:"web", usedIn:["FGT-DB (2020)"], note:"Female Genital Tract metaproteomics explorer"},
+    {name:"MaxQuant", url:"https://www.maxquant.org/", category:"soft", usedIn:["FGT-DB (2020)"], note:"MS proteomics processing"},
+    {name:"UniProt", url:"https://www.uniprot.org/", category:"db", usedIn:["FGT-DB (2020)"], note:"Protein database used for annotation"},
+    {name:"NCBI BLAST", url:"https://blast.ncbi.nlm.nih.gov/Blast.cgi", category:"web", usedIn:["FGT-DB (2020)"], note:"Protein/16S validation searches"},
+    {name:"MetaNovo", url:"https://doi.org/10.1101/605550", category:"soft", usedIn:["FGT-DB (2020)"], note:"Pipeline used to filter UniProt for metaproteomics"},
+    {name:"limma (R)", url:"https://bioconductor.org/packages/release/bioc/html/limma.html", category:"soft", usedIn:["FGT-DB (2020)"], note:"Differential abundance (moderated t-test)"},
+    {name:"randomForest (R)", url:"https://cran.r-project.org/package=randomForest", category:"soft", usedIn:["FGT-DB (2020)"], note:"Classification + feature importance"},
+    {name:"WGCNA", url:"https://cran.r-project.org/package=WGCNA", category:"soft", usedIn:["FGT-DB (2020)"], note:"Co-correlation network analysis"},
+    {name:"mixOmics", url:"https://cran.r-project.org/package=mixOmics", category:"soft", usedIn:["FGT-DB (2020)"], note:"PCA / multi-omics methods"},
+    {name:"ComplexHeatmap", url:"https://bioconductor.org/packages/release/bioc/html/ComplexHeatmap.html", category:"soft", usedIn:["FGT-DB (2020)"], note:"Heatmaps"},
+    {name:"REVIGO", url:"http://revigo.irb.hr/", category:"web", usedIn:["FGT-DB (2020)"], note:"GO term summarization/visualization"},
+    {name:"DADA2", url:"https://bioconductor.org/packages/release/bioc/html/dada2.html", category:"soft", usedIn:["FGT-DB (2020)"], note:"16S denoising/ASV inference"},
+    {name:"SILVA", url:"https://www.arb-silva.de/", category:"db", usedIn:["FGT-DB (2020)"], note:"16S reference database"},
+    {name:"Piphillin", url:"https://doi.org/10.1186/s12864-020-6532-6", category:"web", usedIn:["FGT-DB (2020)"], note:"16S-based functional prediction server (paper-linked)"},
+    {name:"KEGG", url:"https://www.genome.jp/kegg/", category:"db", usedIn:["FGT-DB (2020)"], note:"Pathway database"},
+    {name:"Illumina MiSeq", url:"https://www.illumina.com/systems/sequencing-platforms/miseq.html", category:"soft", usedIn:["FGT-DB (2020)"], note:"16S sequencing platform (mentioned)"},
+    {name:"Luminex (Bio-Rad)", url:"https://www.bio-rad.com/en-us/applications-technologies/luminex-multiplex-assays", category:"soft", usedIn:["FGT-DB (2020)"], note:"Cytokine multiplex measurement (mentioned)"},
+
+    // Coronavirus3D paper
+    {name:"Coronavirus3D", url:"https://coronavirus3d.org/", category:"web", usedIn:["Coronavirus3D (2020)"], note:"3D structural visualization of SARS-CoV-2 mutations"},
+    {name:"CNCB (nCoV)", url:"https://bigd.big.ac.cn/ncov?lang=en", category:"db", usedIn:["Coronavirus3D (2020)"], note:"Mutation/variation data source"},
+    {name:"3Dmol.js", url:"https://3dmol.csb.pitt.edu/", category:"soft", usedIn:["Coronavirus3D (2020)"], note:"WebGL molecular visualization"},
+    {name:"MODELLER", url:"https://salilab.org/modeller/", category:"soft", usedIn:["Coronavirus3D (2020)"], note:"Comparative modeling"},
+    {name:"Protael (paper)", url:"https://doi.org/10.1093/bioinformatics/btv687", category:"soft", usedIn:["Coronavirus3D (2020)"], note:"Web protein data visualization library (paper link)"},
+    {name:"FFAS-3D (paper)", url:"https://doi.org/10.1093/bioinformatics/btt456", category:"soft", usedIn:["Coronavirus3D (2020)"], note:"Fold recognition / alignments (paper link)"},
+
+    // Methods (named)
+    {name:"Binomial test", url:"#", category:"methods", usedIn:["ViralVar (2022)"], note:"Protein mutation enrichment test"},
+    {name:"k-means clustering", url:"#", category:"methods", usedIn:["ViralVar (2022)","FGT-DB (2020)"], note:"Clustering (genomes or cytokines)"},
+    {name:"Silhouette / ASW", url:"#", category:"methods", usedIn:["ViralVar (2022)"], note:"Choose optimal cluster count"},
+    {name:"PCA", url:"#", category:"methods", usedIn:["FGT-DB (2020)"], note:"Dimension reduction"},
+    {name:"Differential abundance (moderated t-test)", url:"#", category:"methods", usedIn:["FGT-DB (2020)"], note:"limma framework"},
+  ];
+
+  // Paper -> tool chips shown per paper card
+  const paperToolMap = {
+    "chips-viralvar": [
+      "ViralVar","R Shiny","Bootstrap","ggplot2","plotly (R)","r3dmol","NbClust","maps (R)","scatterpie (R)",
+      "GISAID","Nextstrain","IEDB (BepiPred 2.0)","Protein Data Bank (PDB)","AlphaFold (models)","TMHMM 2.0",
+      "CoV-GLUE","CoVariants","outbreak.info","CoV3D",
+      "Binomial test","k-means clustering","Silhouette / ASW"
+    ],
+    "chips-fgtdb": [
+      "FGT-DB","MaxQuant","MetaNovo","UniProt","NCBI BLAST","limma (R)","randomForest (R)","WGCNA","mixOmics",
+      "ComplexHeatmap","REVIGO","DADA2","SILVA","Piphillin","KEGG","Illumina MiSeq","Luminex (Bio-Rad)","PCA",
+      "Differential abundance (moderated t-test)"
+    ],
+    "chips-coronavirus3d": [
+      "Coronavirus3D","Protein Data Bank (PDB)","CNCB (nCoV)","3Dmol.js","MODELLER","Protael (paper)","FFAS-3D (paper)","GISAID","Nextstrain"
+    ]
+  };
+
+  function toolByName(name){
+    return tools.find(t => t.name === name);
+  }
+
+  function renderChip(containerId, toolName, kindLabel){
+    const t = toolByName(toolName);
+    if(!t) return;
+
+    const a = document.createElement("a");
+    a.className = "chip";
+    a.href = t.url || "#";
+    if(t.url && t.url !== "#"){
+      a.target = "_blank";
+      a.rel = "noopener";
+    }
+
+    const kind = document.createElement("span");
+    kind.className = "kind";
+    kind.textContent = kindLabel || t.category.toUpperCase();
+
+    const name = document.createElement("span");
+    name.textContent = t.name;
+
+    a.appendChild(kind);
+    a.appendChild(name);
+
+    // tooltip note
+    if(t.note) a.title = t.note;
+
+    document.getElementById(containerId).appendChild(a);
+  }
+
+  function renderPaperChips(){
+    for (const [containerId, names] of Object.entries(paperToolMap)){
+      const c = document.getElementById(containerId);
+      if(!c) continue;
+      c.innerHTML = "";
+      names.forEach(n => {
+        const t = toolByName(n);
+        const label = t ? (t.category === "db" ? "DB" : t.category === "web" ? "WEB" : t.category === "soft" ? "SOFT" : "METHOD") : "TOOL";
+        renderChip(containerId, n, label);
+      });
+    }
+  }
+
+  function renderToolIndex(){
+    const buckets = { web: "tool-web", db: "tool-db", soft: "tool-soft", methods: "tool-methods" };
+    Object.values(buckets).forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=""; });
+
+    tools.forEach(t => {
+      const parentId = buckets[t.category] || buckets.soft;
+      const parent = document.getElementById(parentId);
+      if(!parent) return;
+
+      const box = document.createElement("div");
+      box.className = "tool-card topic";
+      box.setAttribute("data-keywords",
+        [t.name, t.note || "", (t.usedIn||[]).join(" ")].join(" ").toLowerCase()
+      );
+
+      const h = document.createElement("p");
+      h.className = "tool-name";
+      const link = document.createElement("a");
+      link.href = t.url || "#";
+      link.textContent = t.name;
+      if(t.url && t.url !== "#"){ link.target="_blank"; link.rel="noopener"; }
+      h.appendChild(link);
+
+      const meta = document.createElement("p");
+      meta.className = "tool-meta";
+      const where = (t.usedIn && t.usedIn.length) ? `Used/mentioned in: ${t.usedIn.join(", ")}.` : "";
+      meta.textContent = `${t.note || ""} ${where}`.trim();
+
+      box.appendChild(h);
+      box.appendChild(meta);
+      parent.appendChild(box);
+    });
+  }
+
+  // -------------------------------
+  // 2) Search filter
+  // -------------------------------
+  function setupSearch(){
+    const input = document.getElementById("search");
+    const items = () => Array.from(document.querySelectorAll(".topic"));
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      items().forEach(el => {
+        const kw = (el.getAttribute("data-keywords") || el.innerText || "").toLowerCase();
+        el.style.display = (!q || kw.includes(q)) ? "" : "none";
+      });
+    });
+  }
+
+  // -------------------------------
+  // 3) Expand/collapse all details
+  // -------------------------------
+  function setupExpandCollapse(){
+    const allDetails = () => Array.from(document.querySelectorAll("details"));
+    document.getElementById("expandAll").addEventListener("click", () => allDetails().forEach(d => d.open = true));
+    document.getElementById("collapseAll").addEventListener("click", () => allDetails().forEach(d => d.open = false));
+  }
+
+  // -------------------------------
+  // 4) Copy page link
+  // -------------------------------
+  function setupCopyLink(){
+    const btn = document.getElementById("copyLink");
+    btn.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(window.location.href);
+        const old = btn.textContent;
+        btn.textContent = "Link copied!";
+        setTimeout(()=>btn.textContent=old, 900);
+      }catch(e){
+        btn.textContent = "Copy failed";
+        setTimeout(()=>btn.textContent="Copy page link", 900);
+      }
+    });
+  }
+
+  // -------------------------------
+  // 5) Smooth scroll TOC
+  // -------------------------------
+  function setupSmoothScroll(){
+    document.querySelectorAll(".toc a").forEach(a => {
+      a.addEventListener("click", (e) => {
+        const href = a.getAttribute("href");
+        if(!href || !href.startsWith("#")) return;
+        const target = document.querySelector(href);
+        if(!target) return;
+        e.preventDefault();
+        target.scrollIntoView({behavior:"smooth", block:"start"});
+        history.pushState(null, "", href);
+      });
+    });
+  }
+
+  // init
+  renderPaperChips();
+  renderToolIndex();
+  setupSearch();
+  setupExpandCollapse();
+  setupCopyLink();
+  setupSmoothScroll();
+</script>
+</body>
+</html>
