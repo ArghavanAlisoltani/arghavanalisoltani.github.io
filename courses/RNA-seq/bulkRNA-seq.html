@@ -1,0 +1,1424 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bulk RNA-seq (Illumina Short-Read): End-to-End Pipeline + Flags (QC → Align/Quant → DE)</title>
+  <meta name="description" content="A very detailed end-to-end bulk RNA-seq pipeline for Illumina short reads, including tool flags, QC, STAR+featureCounts and Salmon+tximport tracks, DESeq2/edgeR workflows, and reproducibility notes." />
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e9eefc;
+      --muted:#aab6e8;
+      --accent:#7aa2ff;
+      --accent2:#70ffd1;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.20), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(112,255,209,.12), transparent 55%),
+        var(--bg);
+      color:var(--text);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{padding:28px 18px 18px; max-width:1280px; margin:0 auto;}
+    .hero{
+      background: linear-gradient(135deg, rgba(122,162,255,.18), rgba(17,26,51,.0));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px 18px;
+    }
+    h1{margin:0 0 8px; font-size: clamp(22px, 4vw, 36px); letter-spacing:.2px;}
+    .subtitle{margin:0 0 12px; color:var(--muted); line-height:1.6; font-size:15px; max-width:1120px;}
+    .kicker{
+      color:var(--accent2);
+      font-weight:900;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      font-size:12px;
+      margin-top:12px;
+    }
+    .top-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .search-wrap{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex:1;
+      min-width:260px;
+    }
+    input[type="search"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+    }
+    input[type="search"]::placeholder{color:rgba(233,238,252,.55)}
+    .btn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.10)}
+    main{
+      max-width:1280px;
+      margin:0 auto;
+      padding: 0 18px 48px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:14px;
+    }
+    nav{
+      position:sticky;
+      top:14px;
+      align-self:start;
+      height: calc(100vh - 28px);
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.55);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      padding:12px;
+    }
+    nav h2{
+      font-size:13px;
+      margin:6px 8px 10px;
+      color:var(--muted);
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+    .toc a{
+      display:block;
+      padding:8px 10px;
+      border-radius:12px;
+      color:var(--text);
+      border:1px solid transparent;
+      font-size: 14px;
+      line-height:1.35;
+    }
+    .toc a:hover{
+      background: rgba(255,255,255,.06);
+      border-color: var(--border);
+      text-decoration:none;
+    }
+    .content{display:flex; flex-direction:column; gap:12px;}
+    .card{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.45);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-header{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: rgba(15,23,48,.55);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .card-title{margin:0; font-size:16px; line-height:1.35}
+    .tag{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      padding:4px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .card-body{
+      padding:14px 16px 16px;
+      color:var(--text);
+      line-height:1.65;
+      font-size:14.5px;
+    }
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .grid2{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+      margin-top:10px;
+    }
+    .box{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      background: rgba(0,0,0,.20);
+    }
+    .box h3{margin:0 0 6px; font-size:14px}
+    .box p{margin:0; color:var(--muted); font-size:13.5px; line-height:1.55}
+
+    details{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:10px 12px;
+      margin:12px 0 0;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:900;
+      color:var(--text);
+      list-style:none;
+      user-select:none;
+    }
+    summary::-webkit-details-marker{display:none}
+    summary:before{content:"▸"; margin-right:8px; color:var(--muted)}
+    details[open] summary:before{content:"▾"}
+
+    .codeblock pre{
+      margin:10px 0 0;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.32);
+      overflow:auto;
+      padding: 14px 12px 12px;
+      position: relative;
+    }
+    .codeblock code{
+      font-family: var(--mono);
+      font-size: 12.6px;
+      line-height: 1.55;
+      white-space: pre;
+      display:block;
+    }
+    .copy-btn{
+      position:absolute;
+      top:10px;
+      right:10px;
+      padding:6px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+      user-select:none;
+    }
+    .copy-btn:hover{background: rgba(255,255,255,.10)}
+
+    .pillrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      font-weight:900;
+      font-size:13px;
+    }
+    .pill:hover{background: rgba(255,255,255,.10); text-decoration:none}
+
+    .warn{
+      border-left: 4px solid rgba(255, 180, 90, .9);
+      padding: 10px 12px;
+      background: rgba(255, 180, 90, .08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    .ok{
+      border-left: 4px solid rgba(112,255,209,.9);
+      padding: 10px 12px;
+      background: rgba(112,255,209,.08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+      margin-top:10px;
+    }
+    th, td{
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+      font-size:13.5px;
+      line-height:1.45;
+    }
+    th{
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-weight:900;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    tr:last-child td{border-bottom:none}
+
+    ul{margin: 8px 0 0 18px}
+    li{margin: 4px 0}
+
+    @media (max-width: 1100px){
+      main{grid-template-columns:1fr}
+      nav{position:relative; height:auto}
+      .grid2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="hero">
+    <h1>Bulk RNA-seq (Illumina Short-Read) — End-to-End Pipeline</h1>
+    <p class="subtitle">
+      A “course + SOP” for conventional bulk RNA-seq: <b>FASTQ → QC → trimming → alignment or pseudoalignment → quantification → QC → differential expression → reporting</b>.
+      Includes <b>two complete tracks</b>:
+      <b>Track A</b> STAR + featureCounts (alignment-based) and <b>Track B</b> Salmon + tximport (pseudoalignment).
+    </p>
+
+    <div class="kicker">Fast guidance</div>
+    <p class="subtitle">
+      If you want maximum interpretability and compatibility with splice-aware QC, go STAR+featureCounts.
+      If you want speed and robust transcript modeling, go Salmon+tximport.
+      Both can yield high-quality gene-level DE when done carefully.
+    </p>
+
+    <div class="top-actions">
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Filter (e.g., 'strandedness', 'STAR --twopassMode', 'featureCounts -s', 'tximport', 'DESeq2')…" />
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+      <button class="btn" id="copyLink">Copy page link</button>
+    </div>
+
+    <div class="pillrow">
+      <a class="pill" href="#design">Design + metadata</a>
+      <a class="pill" href="#qc1">Raw QC</a>
+      <a class="pill" href="#trim">Trimming</a>
+      <a class="pill" href="#trackA">STAR+featureCounts</a>
+      <a class="pill" href="#trackB">Salmon+tximport</a>
+      <a class="pill" href="#de">Differential expression</a>
+      <a class="pill" href="#reporting">Reporting</a>
+      <a class="pill" href="#nfcore">nf-core option</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav>
+    <h2>Pipeline map</h2>
+    <div class="toc">
+      <a href="#design">0) Study design & metadata (don’t skip)</a>
+      <a href="#inputs">1) Inputs & naming conventions</a>
+      <a href="#structure">2) Project structure</a>
+      <a href="#env">3) Environments & versions</a>
+      <a href="#qc1">4) Raw read QC (FastQC/MultiQC)</a>
+      <a href="#trim">5) Trimming / filtering (fastp or cutadapt)</a>
+      <a href="#strand">6) Strandedness check (RSeQC infer_experiment)</a>
+      <a href="#trackA">7) Track A: STAR alignment + featureCounts</a>
+      <a href="#starindex">7a) STAR genome index</a>
+      <a href="#staralign">7b) STAR align (key flags explained)</a>
+      <a href="#postalignqc">7c) Post-align QC (samtools/RSeQC/Picard)</a>
+      <a href="#fcounts">7d) featureCounts (key flags explained)</a>
+      <a href="#trackB">8) Track B: Salmon quant + tximport</a>
+      <a href="#salmonindex">8a) Salmon index</a>
+      <a href="#salmonquant">8b) Salmon quant (bias correction flags)</a>
+      <a href="#tximport">8c) tximport → gene counts</a>
+      <a href="#de">9) Differential expression (DESeq2 / edgeR / limma-voom)</a>
+      <a href="#downstream">10) Downstream: QC plots, PCA, heatmaps, GSEA</a>
+      <a href="#reporting">11) Reporting checklist (Methods-ready)</a>
+      <a href="#nfcore">12) One-command pipeline (nf-core/rnaseq)</a>
+      <a href="#troubleshooting">13) Troubleshooting</a>
+      <a href="#refs">Links</a>
+    </div>
+  </nav>
+
+  <section class="content">
+
+    <!-- DESIGN -->
+    <article class="card topic" id="design" data-keywords="design replicates batch randomization paired end depth stranded polyA ribodepletion">
+      <div class="card-header">
+        <h2 class="card-title">0) Study design & metadata (the biggest quality lever)</h2>
+        <span class="tag">High impact</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Replicates</h3>
+            <p>
+              Prefer biological replicates (per condition) over deeper sequencing. For DE, replication determines power.
+              Keep track of donor/subject IDs for repeated measures.
+            </p>
+          </div>
+          <div class="box">
+            <h3>Batch confounding</h3>
+            <p>
+              Randomize samples across lanes/runs. If “case” is sequenced in Run1 and “control” in Run2,
+              batch correction cannot reliably recover true biology.
+            </p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>Metadata columns you should always have</summary>
+          <ul>
+            <li><b>sample_id</b>, condition/group, batch/run, lane, library_prep_date</li>
+            <li>organism, genome build (e.g., GRCh38/mm10), annotation version (e.g., GENCODE vXX)</li>
+            <li>library_type: paired/single, read length, strandedness (FR/RF/unstranded if known)</li>
+            <li>selection: poly(A) vs ribo-depletion; any spike-ins (e.g., ERCC)</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Conventional “good defaults” (only as a starting point)</summary>
+          <ul>
+            <li>PE 2×100–150 bp for standard gene-level DE and splice awareness.</li>
+            <li>Poly(A) for mRNA-focused expression; ribo-depletion for degraded RNA or non-polyA transcripts.</li>
+            <li>Typical depth: 20–40M read pairs per sample for human/mouse gene-level DE (varies by complexity and goals).</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Sample sheet template</summary>
+          <div class="codeblock" data-src="code-samplesheet" data-lang="text"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- INPUTS -->
+    <article class="card topic" id="inputs" data-keywords="fastq naming read groups lanes R1 R2 gz">
+      <div class="card-header">
+        <h2 class="card-title">1) Inputs & naming conventions</h2>
+        <span class="tag">Avoid pipeline pain</span>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Prefer gzipped FASTQs: <code>sampleX_R1.fastq.gz</code> and <code>sampleX_R2.fastq.gz</code>.</li>
+          <li>If multiple lanes, either keep lane in filename and merge later, or let aligner handle multiple inputs.</li>
+          <li>Keep a single authoritative sample sheet mapping FASTQs → sample metadata.</li>
+        </ul>
+        <div class="ok"><b>Tip:</b> Never mix genome builds or GTF versions between samples in the same analysis.</div>
+      </div>
+    </article>
+
+    <!-- STRUCTURE -->
+    <article class="card topic" id="structure" data-keywords="project structure folders results logs">
+      <div class="card-header">
+        <h2 class="card-title">2) Project structure (recommended)</h2>
+        <span class="tag">Reproducible layout</span>
+      </div>
+      <div class="card-body">
+        <div class="codeblock" data-src="code-structure" data-lang="bash"></div>
+      </div>
+    </article>
+
+    <!-- ENV -->
+    <article class="card topic" id="env" data-keywords="conda mamba docker versions reproducibility">
+      <div class="card-header">
+        <h2 class="card-title">3) Environments & versioning</h2>
+        <span class="tag">Reproducibility</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Minimal conda environment (common tools)</summary>
+          <div class="codeblock" data-src="code-env" data-lang="yaml"></div>
+        </details>
+        <details>
+          <summary>Record tool versions</summary>
+          <div class="codeblock" data-src="code-versions" data-lang="bash"></div>
+        </details>
+        <div class="warn">
+          If you’re on HPC, prefer containerized workflows (Singularity/Apptainer) or Nextflow pipelines to avoid “it worked on my laptop.”
+        </div>
+      </div>
+    </article>
+
+    <!-- QC1 -->
+    <article class="card topic" id="qc1" data-keywords="fastqc multiqc qc adapters quality per base sequence duplication overrepresented">
+      <div class="card-header">
+        <h2 class="card-title">4) Raw read QC (FastQC → MultiQC)</h2>
+        <span class="tag">First pass</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>FastQC + MultiQC (raw FASTQs)</summary>
+          <div class="codeblock" data-src="code-fastqc-multiqc" data-lang="bash"></div>
+        </details>
+        <details>
+          <summary>What to look for (interpretation notes)</summary>
+          <ul>
+            <li><b>Adapter contamination</b> → trim (fastp/cutadapt).</li>
+            <li><b>Poly-G tails</b> (2-color chemistry artifacts) → enable polyG trimming (fastp).</li>
+            <li><b>Per-base quality drop</b> near end → consider tail trimming; don’t over-trim.</li>
+            <li><b>Overrepresented sequences</b> → adapters, rRNA, primers; investigate.</li>
+            <li><b>Duplication</b>: high duplication can be biological (high expression) or technical; verify later with alignment QC.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- TRIM -->
+    <article class="card topic" id="trim" data-keywords="trimming fastp cutadapt polyG nextseq adapters quality filtering">
+      <div class="card-header">
+        <h2 class="card-title">5) Trimming / filtering (fastp or cutadapt)</h2>
+        <span class="tag">Choose one</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Use fastp when…</h3>
+            <p>
+              You want an all-in-one tool (adapter detect, quality trim, polyG trim, QC JSON/HTML).
+              Great default for Illumina short reads.
+            </p>
+          </div>
+          <div class="box">
+            <h3>Use cutadapt when…</h3>
+            <p>
+              You need very explicit adapter/primer logic, special trimming rules, or complex multi-adapter handling.
+            </p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>fastp (paired-end) — recommended default flags</summary>
+          <div class="codeblock" data-src="code-fastp" data-lang="bash"></div>
+          <div class="muted small">
+            Notes: <code>--detect_adapter_for_pe</code> usually works; set explicit adapters if needed. PolyG trimming is useful on 2-color instruments.
+          </div>
+        </details>
+
+        <details>
+          <summary>cutadapt (paired-end) — explicit adapters + NextSeq-style trimming</summary>
+          <div class="codeblock" data-src="code-cutadapt" data-lang="bash"></div>
+          <div class="muted small">
+            Notes: <code>--nextseq-trim</code> targets NextSeq/NovaSeq quality artifact behavior; adapt to your platform and QC plots.
+          </div>
+        </details>
+
+        <details>
+          <summary>Re-run QC on trimmed reads</summary>
+          <div class="codeblock" data-src="code-qc-trimmed" data-lang="bash"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- STRAND -->
+    <article class="card topic" id="strand" data-keywords="strandedness infer_experiment rseqc fr rf unstranded">
+      <div class="card-header">
+        <h2 class="card-title">6) Strandedness check (highly recommended if unknown)</h2>
+        <span class="tag">Prevents wrong counting</span>
+      </div>
+      <div class="card-body">
+        <div class="warn">
+          If you count with the wrong strandedness setting, gene counts can be wrong (especially in antisense regions).
+          You can infer strandedness after alignment using RSeQC <code>infer_experiment.py</code>.
+        </div>
+        <details open>
+          <summary>RSeQC infer_experiment (after alignment)</summary>
+          <div class="codeblock" data-src="code-infer-experiment" data-lang="bash"></div>
+        </details>
+        <details>
+          <summary>Mapping strandedness → featureCounts -s</summary>
+          <table>
+            <thead><tr><th>Library type</th><th>featureCounts -s</th><th>Typical names</th></tr></thead>
+            <tbody>
+              <tr><td>Unstranded</td><td>0</td><td>none</td></tr>
+              <tr><td>Stranded (forward)</td><td>1</td><td>fr-firststrand / fr-secondstrand (varies by protocol)</td></tr>
+              <tr><td>Stranded (reverse)</td><td>2</td><td>reverse/forward depends on kit; confirm with infer_experiment</td></tr>
+            </tbody>
+          </table>
+          <div class="muted small">Always trust the empirical infer_experiment output over guesswork.</div>
+        </details>
+      </div>
+    </article>
+
+    <!-- TRACK A -->
+    <article class="card topic" id="trackA" data-keywords="star featurecounts alignment bam gtf genome index twopass">
+      <div class="card-header">
+        <h2 class="card-title">7) Track A — STAR alignment + featureCounts</h2>
+        <span class="tag">Alignment-based</span>
+      </div>
+      <div class="card-body">
+        <div class="ok">
+          STAR is a standard splice-aware aligner for bulk RNA-seq. Example current build in docs: 2.7.11b.
+        </div>
+
+        <details id="starindex" open>
+          <summary>7a) Build STAR genome index (one-time per genome+GTF)</summary>
+          <div class="codeblock" data-src="code-star-index" data-lang="bash"></div>
+          <div class="warn">
+            Key: <code>--sjdbOverhang = readLength-1</code> (use your actual read length after trimming if you aggressively trimmed).
+          </div>
+        </details>
+
+        <details id="staralign" open>
+          <summary>7b) STAR align (key flags + what they mean)</summary>
+          <div class="codeblock" data-src="code-star-align" data-lang="bash"></div>
+          <details>
+            <summary>STAR flag notes (read this once)</summary>
+            <ul>
+              <li><code>--twopassMode Basic</code>: improves splice junction detection across reads.</li>
+              <li><code>--outSAMtype BAM SortedByCoordinate</code>: directly produce coord-sorted BAM.</li>
+              <li><code>--quantMode GeneCounts</code>: produces STAR’s simple gene counts; still prefer featureCounts for final counts (more control).</li>
+              <li><code>--outFilterMultimapNmax</code>: controls multi-mappers; too strict can hurt repetitive genes; too lax can inflate ambiguity.</li>
+              <li><code>--outFilterMismatchNoverLmax</code>: mismatch rate; common values ~0.04 for short reads.</li>
+              <li><code>--chim*</code> flags: only enable if you are doing fusion detection; otherwise skip.</li>
+              <li>Always pass <code>--readFilesCommand zcat</code> for gzipped FASTQ.</li>
+            </ul>
+          </details>
+        </details>
+
+        <details id="postalignqc" open>
+          <summary>7c) Post-alignment QC (samtools + RSeQC + optional Picard)</summary>
+          <div class="codeblock" data-src="code-postalign-qc" data-lang="bash"></div>
+          <div class="muted small">
+            Focus: mapping rate, rRNA contamination, insert size (PE), duplication (interpret carefully), gene body coverage, read distribution.
+          </div>
+        </details>
+
+        <details id="fcounts" open>
+          <summary>7d) featureCounts (gene-level counts) — critical flags</summary>
+          <div class="codeblock" data-src="code-featurecounts" data-lang="bash"></div>
+          <details>
+            <summary>featureCounts flag notes (read this once)</summary>
+            <ul>
+              <li><code>-p</code>: input is paired-end.</li>
+              <li><code>--countReadPairs</code>: count fragments (pairs) not individual reads (important in Subread ≥2.0.2 behavior).</li>
+              <li><code>-B</code>: require both ends mapped.</li>
+              <li><code>-C</code>: exclude chimeric fragments (mates mapped to different chromosomes).</li>
+              <li><code>-s 0/1/2</code>: strandedness (see infer_experiment step).</li>
+              <li><code>-t exon -g gene_id</code>: count exons and aggregate by gene_id (standard for gene-level).</li>
+              <li><code>-a annotation.gtf</code>: GTF must match genome build used for alignment.</li>
+            </ul>
+          </details>
+        </details>
+      </div>
+    </article>
+
+    <!-- TRACK B -->
+    <article class="card topic" id="trackB" data-keywords="salmon tximport pseudoalignment quant transcript gene counts bias correction">
+      <div class="card-header">
+        <h2 class="card-title">8) Track B — Salmon quant + tximport</h2>
+        <span class="tag">Fast pseudoalignment</span>
+      </div>
+      <div class="card-body">
+        <div class="warn">
+          Salmon quantifies transcripts; gene-level DE typically uses tximport to summarize to genes.
+          Make sure your transcript FASTA and tx2gene mapping match your annotation.
+        </div>
+
+        <details id="salmonindex" open>
+          <summary>8a) Build Salmon transcriptome index</summary>
+          <div class="codeblock" data-src="code-salmon-index" data-lang="bash"></div>
+        </details>
+
+        <details id="salmonquant" open>
+          <summary>8b) Salmon quant (paired-end) — important bias flags</summary>
+          <div class="codeblock" data-src="code-salmon-quant" data-lang="bash"></div>
+          <details>
+            <summary>Salmon flag notes (read this once)</summary>
+            <ul>
+              <li><code>--validateMappings</code>: improves mapping accuracy (recommended).</li>
+              <li><code>--gcBias</code> and <code>--seqBias</code>: bias correction (common recommended defaults).</li>
+              <li><code>-l A</code>: auto-detect library type; if uncertain, keep <code>A</code>.</li>
+              <li><code>--numBootstraps</code>: uncertainty estimation; optional, increases compute.</li>
+            </ul>
+          </details>
+        </details>
+
+        <details id="tximport" open>
+          <summary>8c) tximport → gene counts → DESeq2</summary>
+          <div class="codeblock" data-src="code-tximport-deseq2" data-lang="r"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- DE -->
+    <article class="card topic" id="de" data-keywords="deseq2 edger limma voom differential expression design formula batch lfc shrink">
+      <div class="card-header">
+        <h2 class="card-title">9) Differential expression (DESeq2 / edgeR / limma-voom)</h2>
+        <span class="tag">Inference</span>
+      </div>
+      <div class="card-body">
+        <div class="warn">
+          Differential expression requires an appropriate <b>experimental unit</b> (e.g., donor/subject) and a correct design formula.
+          Don’t treat technical replicates as biological replicates.
+        </div>
+
+        <details open>
+          <summary>DESeq2 “canonical” workflow (gene counts matrix)</summary>
+          <div class="codeblock" data-src="code-deseq2" data-lang="r"></div>
+        </details>
+
+        <details>
+          <summary>edgeR (alternative) template</summary>
+          <div class="codeblock" data-src="code-edger" data-lang="r"></div>
+        </details>
+
+        <details>
+          <summary>limma-voom (alternative) template</summary>
+          <div class="codeblock" data-src="code-limma" data-lang="r"></div>
+        </details>
+
+        <details>
+          <summary>DE “gotchas” checklist</summary>
+          <ul>
+            <li>Pre-filter very low-count genes (improves speed and reduces noise).</li>
+            <li>Check sample QC + PCA for outliers before trusting DE results.</li>
+            <li>Include batch in design if not confounded with condition.</li>
+            <li>Use LFC shrinkage for stable effect sizes when ranking genes.</li>
+            <li>Report adjusted p-values (FDR), not raw p-values.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Downstream -->
+    <article class="card topic" id="downstream" data-keywords="pca heatmap gsea fgsea clusterprofiler volcano ma plot">
+      <div class="card-header">
+        <h2 class="card-title">10) Downstream: QC plots, PCA, heatmaps, GSEA</h2>
+        <span class="tag">Interpretation</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Core visualization set (DESeq2)</summary>
+          <div class="codeblock" data-src="code-viz" data-lang="r"></div>
+        </details>
+        <details>
+          <summary>Fast GSEA with fgsea (example)</summary>
+          <div class="codeblock" data-src="code-fgsea" data-lang="r"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Reporting -->
+    <article class="card topic" id="reporting" data-keywords="methods reporting versions parameters gtf genome read length strandedness">
+      <div class="card-header">
+        <h2 class="card-title">11) Reporting checklist (Methods-ready)</h2>
+        <span class="tag">Don’t forget</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Always report these items</summary>
+          <ul>
+            <li>Sequencing: platform, read length, PE/SE, lane info, depth per sample, polyA vs ribo-depletion.</li>
+            <li>Reference: genome build + exact GTF/annotation version; transcriptome FASTA if Salmon.</li>
+            <li>Preprocessing: trimming tool and parameters, any polyG/NextSeq trimming.</li>
+            <li>Alignment/quant: STAR or Salmon version and key flags; featureCounts strandedness, fragment counting, GTF features.</li>
+            <li>QC: MultiQC summary; mapping rates; duplication; gene body coverage; rRNA contamination checks; insert size.</li>
+            <li>DE model: design formula, covariates, filtering, shrinkage, FDR threshold.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Export bundle (shareable folder)</summary>
+          <div class="codeblock" data-src="code-bundle" data-lang="bash"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- nf-core -->
+    <article class="card topic" id="nfcore" data-keywords="nf-core rnaseq nextflow one command pipeline star salmon rsem multiqc">
+      <div class="card-header">
+        <h2 class="card-title">12) One-command pipeline option: nf-core/rnaseq (Nextflow)</h2>
+        <span class="tag">Production-ready</span>
+      </div>
+      <div class="card-body">
+        <div class="ok">
+          If you want a battle-tested pipeline with extensive QC and multiple align/quant options, nf-core/rnaseq is a strong default.
+        </div>
+        <details open>
+          <summary>nf-core/rnaseq run example (Docker profile)</summary>
+          <div class="codeblock" data-src="code-nfcore" data-lang="bash"></div>
+        </details>
+        <details>
+          <summary>nf-core sample sheet (minimal)</summary>
+          <div class="codeblock" data-src="code-nfcore-samplesheet" data-lang="text"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Troubleshooting -->
+    <article class="card topic" id="troubleshooting" data-keywords="troubleshooting low mapping rrna contamination adapter strandedness wrong gtf">
+      <div class="card-header">
+        <h2 class="card-title">13) Troubleshooting (high-frequency issues)</h2>
+        <span class="tag">Fix fast</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Low mapping rate</summary>
+          <ul>
+            <li>Wrong genome build or wrong species reference.</li>
+            <li>Adapters/poor quality not trimmed.</li>
+            <li>rRNA contamination (especially with ribo-depletion failures).</li>
+            <li>Reads from contamination or mixed samples.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Counts look “off” / many antisense reads</summary>
+          <ul>
+            <li>Strandedness parameter incorrect (featureCounts -s). Run infer_experiment.</li>
+            <li>GTF mismatch with genome build (chrom names, coordinate system, version differences).</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Batch dominates PCA</summary>
+          <ul>
+            <li>Confirm if batch is confounded with condition; if yes, interpretation is limited.</li>
+            <li>If not confounded, include batch in design formula and re-check PCA on vst/rlog.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Links -->
+    <article class="card topic" id="refs" data-keywords="links star salmon fastp cutadapt multiqc subread featurecounts nf-core rnaseq">
+      <div class="card-header">
+        <h2 class="card-title">Links</h2>
+        <span class="tag">Docs</span>
+      </div>
+      <div class="card-body">
+        <div class="pillrow">
+          <a class="pill" href="https://www.bioinformatics.babraham.ac.uk/projects/fastqc/" target="_blank" rel="noopener">FastQC</a>
+          <a class="pill" href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">MultiQC</a>
+          <a class="pill" href="https://github.com/OpenGene/fastp" target="_blank" rel="noopener">fastp</a>
+          <a class="pill" href="https://cutadapt.readthedocs.io/" target="_blank" rel="noopener">cutadapt</a>
+          <a class="pill" href="https://github.com/alexdobin/STAR" target="_blank" rel="noopener">STAR</a>
+          <a class="pill" href="https://subread.sourceforge.net/featureCounts.html" target="_blank" rel="noopener">featureCounts</a>
+          <a class="pill" href="https://combine-lab.github.io/salmon/" target="_blank" rel="noopener">Salmon</a>
+          <a class="pill" href="https://nf-co.re/rnaseq" target="_blank" rel="noopener">nf-core/rnaseq</a>
+          <a class="pill" href="https://bioconductor.org/packages/release/bioc/html/DESeq2.html" target="_blank" rel="noopener">DESeq2</a>
+        </div>
+      </div>
+    </article>
+
+  </section>
+</main>
+
+<!-- =========================
+     CODE SNIPPETS (RAW TEXT)
+========================= -->
+
+<script type="text/plain" id="code-samplesheet">
+# metadata/samples.csv
+# Required minimal columns:
+# sample_id,condition,batch,fastq_r1,fastq_r2
+# Optional helpful columns: lane,replicate,sex,age,donor,library_type,notes
+
+sample_id,condition,batch,fastq_r1,fastq_r2
+S01,case,run1,raw_fastq/S01_R1.fastq.gz,raw_fastq/S01_R2.fastq.gz
+S02,case,run1,raw_fastq/S02_R1.fastq.gz,raw_fastq/S02_R2.fastq.gz
+S03,control,run2,raw_fastq/S03_R1.fastq.gz,raw_fastq/S03_R2.fastq.gz
+S04,control,run2,raw_fastq/S04_R1.fastq.gz,raw_fastq/S04_R2.fastq.gz
+</script>
+
+<script type="text/plain" id="code-structure">
+mkdir -p project/{
+  raw_fastq,
+  metadata,
+  refs/{genome,gtf,transcriptome},
+  results/{00_qc_raw,01_trim,02_qc_trim,03_star,04_postalign_qc,05_counts,06_salmon,07_de,08_plots,99_reports},
+  logs,
+  scripts
+}
+</script>
+
+<script type="text/plain" id="code-env">
+name: bulk_rnaseq
+channels: [conda-forge, bioconda, defaults]
+dependencies:
+  - python=3.11
+  - fastqc
+  - multiqc
+  - fastp
+  - cutadapt
+  - star
+  - samtools
+  - subread           # featureCounts
+  - salmon
+  - r-base
+  - bioconductor-deseq2
+  - bioconductor-tximport
+  - r-tidyverse
+  - r-pheatmap
+  - r-ggplot2
+</script>
+
+<script type="text/plain" id="code-versions">
+mkdir -p results/99_reports
+{
+  date
+  uname -a
+  fastqc --version || true
+  multiqc --version || true
+  fastp --version || true
+  cutadapt --version || true
+  STAR --version || true
+  samtools --version | head -n 2 || true
+  featureCounts -v || true
+  salmon --version || true
+} > results/99_reports/versions.txt
+</script>
+
+<script type="text/plain" id="code-fastqc-multiqc">
+mkdir -p results/00_qc_raw/fastqc results/00_qc_raw/multiqc logs
+
+# Run FastQC on all FASTQs
+fastqc -t 8 -o results/00_qc_raw/fastqc raw_fastq/*.fastq.gz 2>&1 | tee logs/fastqc_raw.log
+
+# Aggregate with MultiQC
+multiqc -o results/00_qc_raw/multiqc results/00_qc_raw/fastqc 2>&1 | tee logs/multiqc_raw.log
+</script>
+
+<script type="text/plain" id="code-fastp">
+mkdir -p results/01_trim/fastp results/01_trim/fastp_reports logs
+
+# Example for one sample; wrap in a loop over samples.csv in scripts
+SAMPLE=S01
+R1=raw_fastq/${SAMPLE}_R1.fastq.gz
+R2=raw_fastq/${SAMPLE}_R2.fastq.gz
+
+fastp \
+  -i ${R1} -I ${R2} \
+  -o results/01_trim/fastp/${SAMPLE}_R1.trim.fastq.gz \
+  -O results/01_trim/fastp/${SAMPLE}_R2.trim.fastq.gz \
+  --detect_adapter_for_pe \
+  --trim_poly_g \
+  --cut_tail \
+  --cut_window_size 4 \
+  --cut_mean_quality 20 \
+  --length_required 30 \
+  --qualified_quality_phred 15 \
+  --overrepresentation_analysis \
+  --thread 8 \
+  --html results/01_trim/fastp_reports/${SAMPLE}.html \
+  --json results/01_trim/fastp_reports/${SAMPLE}.json \
+  2>&1 | tee logs/fastp_${SAMPLE}.log
+</script>
+
+<script type="text/plain" id="code-cutadapt">
+mkdir -p results/01_trim/cutadapt logs
+
+SAMPLE=S01
+R1=raw_fastq/${SAMPLE}_R1.fastq.gz
+R2=raw_fastq/${SAMPLE}_R2.fastq.gz
+
+# Replace adapter sequences if you know them; these are common Illumina adapters
+ADAPT_R1=AGATCGGAAGAGCACACGTCTGAACTCCAGTCA
+ADAPT_R2=AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT
+
+cutadapt \
+  -j 8 \
+  -a ${ADAPT_R1} -A ${ADAPT_R2} \
+  --quality-cutoff 20,20 \
+  --minimum-length 30 \
+  --nextseq-trim 20 \
+  -o results/01_trim/cutadapt/${SAMPLE}_R1.trim.fastq.gz \
+  -p results/01_trim/cutadapt/${SAMPLE}_R2.trim.fastq.gz \
+  ${R1} ${R2} \
+  2>&1 | tee logs/cutadapt_${SAMPLE}.log
+</script>
+
+<script type="text/plain" id="code-qc-trimmed">
+mkdir -p results/02_qc_trim/fastqc results/02_qc_trim/multiqc logs
+
+fastqc -t 8 -o results/02_qc_trim/fastqc results/01_trim/*/*.fastq.gz 2>&1 | tee logs/fastqc_trim.log
+multiqc -o results/02_qc_trim/multiqc results/02_qc_trim/fastqc results/01_trim 2>&1 | tee logs/multiqc_trim.log
+</script>
+
+<script type="text/plain" id="code-star-index">
+# Build STAR genome index (one-time per genome+annotation)
+# Inputs:
+#   refs/genome/genome.fa
+#   refs/gtf/annotation.gtf
+# Choose sjdbOverhang = readLength-1 (e.g., 149 for 2x150)
+
+GENOME_FA=refs/genome/genome.fa
+GTF=refs/gtf/annotation.gtf
+OUTDIR=refs/star_index
+READLEN=150
+
+mkdir -p ${OUTDIR} logs
+
+STAR --runThreadN 16 \
+  --runMode genomeGenerate \
+  --genomeDir ${OUTDIR} \
+  --genomeFastaFiles ${GENOME_FA} \
+  --sjdbGTFfile ${GTF} \
+  --sjdbOverhang $((READLEN-1)) \
+  2>&1 | tee logs/star_genomeGenerate.log
+</script>
+
+<script type="text/plain" id="code-star-align">
+# STAR alignment for one sample (wrap in loop)
+# Key outputs:
+#   results/03_star/<sample>/<sample>.Aligned.sortedByCoord.out.bam
+#   results/03_star/<sample>/<sample>.Log.final.out
+
+SAMPLE=S01
+R1=results/01_trim/fastp/${SAMPLE}_R1.trim.fastq.gz
+R2=results/01_trim/fastp/${SAMPLE}_R2.trim.fastq.gz
+
+GENOMEDIR=refs/star_index
+OUT=results/03_star/${SAMPLE}
+mkdir -p ${OUT} logs
+
+STAR --runThreadN 16 \
+  --genomeDir ${GENOMEDIR} \
+  --readFilesIn ${R1} ${R2} \
+  --readFilesCommand zcat \
+  --twopassMode Basic \
+  --outFileNamePrefix ${OUT}/${SAMPLE}. \
+  --outSAMtype BAM SortedByCoordinate \
+  --outSAMattributes NH HI AS nM MD \
+  --outFilterMultimapNmax 20 \
+  --outFilterMismatchNoverLmax 0.04 \
+  --alignSJoverhangMin 8 \
+  --alignSJDBoverhangMin 1 \
+  --alignIntronMin 20 \
+  --alignIntronMax 1000000 \
+  --alignMatesGapMax 1000000 \
+  --quantMode GeneCounts \
+  2>&1 | tee logs/star_align_${SAMPLE}.log
+
+# Index BAM
+samtools index -@ 8 ${OUT}/${SAMPLE}.Aligned.sortedByCoord.out.bam
+</script>
+
+<script type="text/plain" id="code-postalign-qc">
+SAMPLE=S01
+BAM=results/03_star/${SAMPLE}/${SAMPLE}.Aligned.sortedByCoord.out.bam
+GTF=refs/gtf/annotation.gtf
+
+mkdir -p results/04_postalign_qc/${SAMPLE} logs
+
+# samtools mapping summaries
+samtools flagstat -@ 8 ${BAM} > results/04_postalign_qc/${SAMPLE}/flagstat.txt
+samtools idxstats ${BAM} > results/04_postalign_qc/${SAMPLE}/idxstats.txt
+
+# Optional: RSeQC (needs BED gene model). Build once from GTF using provided scripts.
+# infer_experiment.py determines strandedness.
+# read_distribution.py gives exonic/intronic/intergenic distribution.
+# geneBody_coverage.py checks 5'→3' bias / degradation.
+#
+# Example placeholders:
+# BED12=refs/gtf/genes.bed
+# infer_experiment.py -r ${BED12} -i ${BAM} > results/04_postalign_qc/${SAMPLE}/infer_experiment.txt
+# read_distribution.py -r ${BED12} -i ${BAM} > results/04_postalign_qc/${SAMPLE}/read_distribution.txt
+# geneBody_coverage.py -r ${BED12} -i ${BAM} -o results/04_postalign_qc/${SAMPLE}/geneBody
+
+# Optional: Picard CollectRnaSeqMetrics (requires refFlat and rRNA intervals; advanced)
+</script>
+
+<script type="text/plain" id="code-infer-experiment">
+# After you have a BED12 gene model (e.g., from GTF)
+SAMPLE=S01
+BAM=results/03_star/${SAMPLE}/${SAMPLE}.Aligned.sortedByCoord.out.bam
+BED12=refs/gtf/genes.bed
+
+infer_experiment.py -r ${BED12} -i ${BAM} > results/04_postalign_qc/${SAMPLE}/infer_experiment.txt
+cat results/04_postalign_qc/${SAMPLE}/infer_experiment.txt
+</script>
+
+<script type="text/plain" id="code-featurecounts">
+# featureCounts gene-level counting (one sample or list of BAMs)
+# Important: -s depends on strandedness (0/1/2). Use infer_experiment output.
+# Important: for paired-end, include -p and --countReadPairs (fragment-level counts).
+# Note: Subread 2.0.2 introduced explicit --countReadPairs behavior.
+
+GTF=refs/gtf/annotation.gtf
+OUT=results/05_counts/gene_counts.txt
+mkdir -p results/05_counts logs
+
+# Example: count all BAMs in results/03_star/*/*.bam
+featureCounts \
+  -T 16 \
+  -a ${GTF} \
+  -o ${OUT} \
+  -t exon \
+  -g gene_id \
+  -p \
+  --countReadPairs \
+  -B \
+  -C \
+  -s 0 \
+  results/03_star/*/*.Aligned.sortedByCoord.out.bam \
+  2>&1 | tee logs/featureCounts.log
+</script>
+
+<script type="text/plain" id="code-salmon-index">
+# Build Salmon transcriptome index (one-time per transcriptome FASTA)
+# transcriptome FASTA must match the same annotation used for tx2gene mapping.
+TXFA=refs/transcriptome/transcripts.fa
+IDX=refs/salmon_index
+
+mkdir -p ${IDX} logs
+salmon index -t ${TXFA} -i ${IDX} -k 31 2>&1 | tee logs/salmon_index.log
+</script>
+
+<script type="text/plain" id="code-salmon-quant">
+# Salmon quant for one sample (wrap in loop)
+SAMPLE=S01
+R1=results/01_trim/fastp/${SAMPLE}_R1.trim.fastq.gz
+R2=results/01_trim/fastp/${SAMPLE}_R2.trim.fastq.gz
+IDX=refs/salmon_index
+
+OUT=results/06_salmon/${SAMPLE}
+mkdir -p ${OUT} logs
+
+salmon quant \
+  -i ${IDX} \
+  -l A \
+  -1 ${R1} -2 ${R2} \
+  --validateMappings \
+  --seqBias \
+  --gcBias \
+  -p 8 \
+  -o ${OUT} \
+  2>&1 | tee logs/salmon_${SAMPLE}.log
+
+# Output contains quant.sf (TPM, counts, effective length).
+</script>
+
+<script type="text/plain" id="code-tximport-deseq2">
+# tximport + DESeq2 starting from Salmon quant.sf
+suppressPackageStartupMessages({
+  library(tximport)
+  library(DESeq2)
+  library(readr)
+  library(dplyr)
+})
+
+samples <- read.csv("metadata/samples.csv", stringsAsFactors = FALSE)
+
+# Build paths to quant.sf
+files <- setNames(file.path("results/06_salmon", samples$sample_id, "quant.sf"), samples$sample_id)
+
+# tx2gene mapping:
+# Provide a two-column table: transcript_id, gene_id
+# You can derive this from GTF or a tx2gene file you maintain.
+tx2gene <- read_tsv("refs/transcriptome/tx2gene.tsv", col_names = c("tx", "gene"))
+
+txi <- tximport(files, type="salmon", tx2gene=tx2gene, ignoreTxVersion=TRUE)
+
+coldata <- samples %>% select(sample_id, condition, batch)
+rownames(coldata) <- coldata$sample_id
+
+dds <- DESeqDataSetFromTximport(txi, colData=coldata, design= ~ batch + condition)
+dds <- dds[rowSums(counts(dds)) >= 10, ]
+dds <- DESeq(dds)
+
+res <- results(dds, contrast=c("condition","case","control"))
+res <- lfcShrink(dds, coef="condition_case_vs_control", res=res, type="apeglm")
+
+write.csv(as.data.frame(res), file="results/07_de/deseq2_salmon_gene_results.csv")
+</script>
+
+<script type="text/plain" id="code-deseq2">
+suppressPackageStartupMessages({
+  library(DESeq2)
+  library(readr)
+  library(dplyr)
+})
+
+dir.create("results/07_de", recursive=TRUE, showWarnings=FALSE)
+
+# featureCounts output: first columns are annotation; counts start after fixed columns.
+# Use a robust import approach:
+counts_raw <- read.delim("results/05_counts/gene_counts.txt", comment.char="#", check.names=FALSE)
+gene_id <- counts_raw$Geneid
+count_mat <- as.matrix(counts_raw[, -(1:6)])  # typical featureCounts columns: Geneid Chr Start End Strand Length
+
+rownames(count_mat) <- gene_id
+
+samples <- read.csv("metadata/samples.csv", stringsAsFactors = FALSE)
+# Ensure column order matches sample_id (featureCounts columns are BAM basenames; you may need to rename)
+# Here we assume columns are sample IDs; adjust as needed.
+count_mat <- count_mat[, samples$sample_id, drop=FALSE]
+
+coldata <- samples %>% select(sample_id, condition, batch)
+rownames(coldata) <- coldata$sample_id
+
+dds <- DESeqDataSetFromMatrix(countData = round(count_mat), colData = coldata, design = ~ batch + condition)
+
+# Prefilter very low counts
+dds <- dds[rowSums(counts(dds)) >= 10, ]
+
+dds <- DESeq(dds)
+
+res <- results(dds, contrast=c("condition","case","control"))
+# Shrink LFC for stable effect sizes (requires apeglm)
+# BiocManager::install("apeglm")
+library(apeglm)
+res_shr <- lfcShrink(dds, coef="condition_case_vs_control", res=res, type="apeglm")
+
+write.csv(as.data.frame(res), "results/07_de/deseq2_gene_results.csv")
+write.csv(as.data.frame(res_shr), "results/07_de/deseq2_gene_results_lfcShrink.csv")
+
+# Save normalized counts
+norm_counts <- counts(dds, normalized=TRUE)
+write.csv(norm_counts, "results/07_de/deseq2_normalized_counts.csv")
+</script>
+
+<script type="text/plain" id="code-edger">
+suppressPackageStartupMessages({
+  library(edgeR)
+  library(dplyr)
+})
+
+counts_raw <- read.delim("results/05_counts/gene_counts.txt", comment.char="#", check.names=FALSE)
+gene_id <- counts_raw$Geneid
+count_mat <- as.matrix(counts_raw[, -(1:6)])
+rownames(count_mat) <- gene_id
+
+samples <- read.csv("metadata/samples.csv", stringsAsFactors = FALSE)
+count_mat <- count_mat[, samples$sample_id, drop=FALSE]
+
+y <- DGEList(counts = count_mat, group = samples$condition)
+keep <- filterByExpr(y, group=samples$condition)
+y <- y[keep,, keep.lib.sizes=FALSE]
+y <- calcNormFactors(y)
+
+design <- model.matrix(~ batch + condition, data=samples)
+y <- estimateDisp(y, design)
+fit <- glmQLFit(y, design)
+res <- glmQLFTest(fit, coef="conditioncase")  # adjust coef name based on design colnames
+
+out <- topTags(res, n=Inf)$table
+out$gene <- rownames(out)
+dir.create("results/07_de", recursive=TRUE, showWarnings=FALSE)
+write.csv(out, "results/07_de/edger_gene_results.csv", row.names=FALSE)
+</script>
+
+<script type="text/plain" id="code-limma">
+suppressPackageStartupMessages({
+  library(limma)
+  library(edgeR)
+})
+
+counts_raw <- read.delim("results/05_counts/gene_counts.txt", comment.char="#", check.names=FALSE)
+gene_id <- counts_raw$Geneid
+count_mat <- as.matrix(counts_raw[, -(1:6)])
+rownames(count_mat) <- gene_id
+
+samples <- read.csv("metadata/samples.csv", stringsAsFactors = FALSE)
+count_mat <- count_mat[, samples$sample_id, drop=FALSE]
+
+dge <- DGEList(counts = count_mat)
+keep <- filterByExpr(dge, group=samples$condition)
+dge <- dge[keep,, keep.lib.sizes=FALSE]
+dge <- calcNormFactors(dge)
+
+design <- model.matrix(~ batch + condition, data=samples)
+v <- voom(dge, design, plot=TRUE)
+
+fit <- lmFit(v, design)
+fit <- eBayes(fit)
+
+tt <- topTable(fit, coef="conditioncase", number=Inf, sort.by="P")  # adjust coef name
+dir.create("results/07_de", recursive=TRUE, showWarnings=FALSE)
+write.csv(tt, "results/07_de/limma_voom_gene_results.csv")
+</script>
+
+<script type="text/plain" id="code-viz">
+suppressPackageStartupMessages({
+  library(DESeq2)
+  library(ggplot2)
+  library(pheatmap)
+})
+
+dds <- readRDS("results/07_de/dds.rds")  # optional if you saved it; otherwise recreate
+vsd <- vst(dds, blind=FALSE)
+
+# PCA
+p <- plotPCA(vsd, intgroup=c("condition","batch"), returnData=TRUE)
+percentVar <- round(100 * attr(p, "percentVar"))
+
+ggplot(p, aes(PC1, PC2, color=condition, shape=batch)) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ", percentVar[1], "%")) +
+  ylab(paste0("PC2: ", percentVar[2], "%")) +
+  theme_minimal()
+
+ggsave("results/08_plots/pca_vst.png", width=6, height=4, dpi=200)
+
+# Sample distance heatmap
+sampleDists <- dist(t(assay(vsd)))
+pheatmap(as.matrix(sampleDists), filename="results/08_plots/sample_dist_heatmap.png")
+</script>
+
+<script type="text/plain" id="code-fgsea">
+# Quick GSEA with fgsea (example)
+# Requires gene ranking (e.g., res$stat from DESeq2)
+# BiocManager::install("fgsea")
+
+library(fgsea)
+library(data.table)
+
+res <- read.csv("results/07_de/deseq2_gene_results_lfcShrink.csv", row.names=1)
+
+# Example rank by stat or log2FoldChange
+ranks <- res$log2FoldChange
+names(ranks) <- rownames(res)
+ranks <- sort(ranks, decreasing=TRUE)
+
+# pathways: a named list of gene sets (e.g., MSigDB)
+# pathways <- gmtPathways("refs/msigdb_hallmark.gmt")
+
+# fg <- fgsea(pathways=pathways, stats=ranks, nperm=10000)
+# write.csv(fg, "results/08_plots/fgsea_results.csv", row.names=FALSE)
+cat("Provide a pathways list (GMT) to run fgsea.\n")
+</script>
+
+<script type="text/plain" id="code-bundle">
+mkdir -p results/99_reports
+tar -czf results/99_reports/bulk_rnaseq_bundle.tgz results/ metadata/ refs/ logs/ scripts/ 2>/dev/null || true
+</script>
+
+<script type="text/plain" id="code-nfcore">
+# nf-core/rnaseq: one-command pipeline (example)
+# Install nextflow then run:
+#  nextflow run nf-core/rnaseq -profile docker --input samplesheet.csv --outdir results_nfcore
+
+nextflow run nf-core/rnaseq \
+  -profile docker \
+  --input metadata/nfcore_samplesheet.csv \
+  --outdir results_nfcore \
+  --genome GRCh38 \
+  --aligner star_salmon \
+  --skip_trimming false \
+  -resume
+</script>
+
+<script type="text/plain" id="code-nfcore-samplesheet">
+# metadata/nfcore_samplesheet.csv (minimal example)
+# See nf-core/rnaseq docs for full schema
+sample,fastq_1,fastq_2,strandedness
+S01,raw_fastq/S01_R1.fastq.gz,raw_fastq/S01_R2.fastq.gz,auto
+S02,raw_fastq/S02_R1.fastq.gz,raw_fastq/S02_R2.fastq.gz,auto
+</script>
+
+<script>
+  function renderCodeblocks(){
+    document.querySelectorAll(".codeblock").forEach(el => {
+      const src = el.getAttribute("data-src");
+      const node = document.getElementById(src);
+      if(!node) return;
+      const text = node.textContent.replace(/^\n+|\n+$/g, "");
+
+      const pre = document.createElement("pre");
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+
+      const code = document.createElement("code");
+      code.textContent = text;
+
+      btn.addEventListener("click", async () => {
+        try{
+          await navigator.clipboard.writeText(text);
+          const old = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(()=>btn.textContent=old, 900);
+        }catch(e){
+          btn.textContent = "Copy failed";
+          setTimeout(()=>btn.textContent="Copy", 900);
+        }
+      });
+
+      pre.appendChild(btn);
+      pre.appendChild(code);
+      el.appendChild(pre);
+    });
+  }
+
+  function setupSearch(){
+    const input = document.getElementById("search");
+    const topics = () => Array.from(document.querySelectorAll(".topic"));
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      topics().forEach(t => {
+        const kw = (t.getAttribute("data-keywords") || "").toLowerCase();
+        const text = t.innerText.toLowerCase();
+        const show = !q || kw.includes(q) || text.includes(q);
+        t.style.display = show ? "" : "none";
+      });
+    });
+  }
+
+  function setupExpandCollapse(){
+    const allDetails = () => Array.from(document.querySelectorAll("details"));
+    document.getElementById("expandAll").addEventListener("click", () => allDetails().forEach(d => d.open = true));
+    document.getElementById("collapseAll").addEventListener("click", () => allDetails().forEach(d => d.open = false));
+  }
+
+  function setupCopyLink(){
+    const btn = document.getElementById("copyLink");
+    btn.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(window.location.href);
+        const old = btn.textContent;
+        btn.textContent = "Link copied!";
+        setTimeout(()=>btn.textContent=old, 900);
+      }catch(e){
+        btn.textContent = "Copy failed";
+        setTimeout(()=>btn.textContent="Copy page link", 900);
+      }
+    });
+  }
+
+  function setupSmoothScroll(){
+    document.querySelectorAll(".toc a, .pillrow a").forEach(a => {
+      a.addEventListener("click", (e) => {
+        const href = a.getAttribute("href");
+        if(!href || !href.startsWith("#")) return;
+        const target = document.querySelector(href);
+        if(!target) return;
+        e.preventDefault();
+        target.scrollIntoView({behavior:"smooth", block:"start"});
+        history.pushState(null, "", href);
+      });
+    });
+  }
+
+  renderCodeblocks();
+  setupSearch();
+  setupExpandCollapse();
+  setupCopyLink();
+  setupSmoothScroll();
+</script>
+</body>
+</html>
