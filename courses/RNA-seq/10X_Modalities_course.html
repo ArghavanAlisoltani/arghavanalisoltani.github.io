@@ -1,0 +1,1384 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>10x Modalities Course: GEX vs Multiome RNA+ATAC vs CITE-seq/HTO vs VDJ</title>
+  <meta name="description" content="A detailed course explaining 10x Genomics modalities (GEX, Multiome RNA+ATAC, CITE-seq/HTO, VDJ), including what each measures, data outputs, QC metrics, and end-to-end analysis pipelines with code." />
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e9eefc;
+      --muted:#aab6e8;
+      --accent:#7aa2ff;
+      --accent2:#70ffd1;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.20), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(112,255,209,.12), transparent 55%),
+        var(--bg);
+      color:var(--text);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{padding:28px 18px 18px; max-width:1280px; margin:0 auto;}
+    .hero{
+      background: linear-gradient(135deg, rgba(122,162,255,.18), rgba(17,26,51,.0));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px 18px;
+    }
+    h1{margin:0 0 8px; font-size: clamp(22px, 4vw, 36px); letter-spacing:.2px;}
+    .subtitle{margin:0 0 12px; color:var(--muted); line-height:1.6; font-size:15px; max-width:1100px;}
+    .kicker{
+      color:var(--accent2);
+      font-weight:900;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      font-size:12px;
+      margin-top:12px;
+    }
+    .top-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .search-wrap{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex:1;
+      min-width:260px;
+    }
+    input[type="search"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+    }
+    input[type="search"]::placeholder{color:rgba(233,238,252,.55)}
+    .btn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.10)}
+    main{
+      max-width:1280px;
+      margin:0 auto;
+      padding: 0 18px 48px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:14px;
+    }
+    nav{
+      position:sticky;
+      top:14px;
+      align-self:start;
+      height: calc(100vh - 28px);
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.55);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      padding:12px;
+    }
+    nav h2{
+      font-size:13px;
+      margin:6px 8px 10px;
+      color:var(--muted);
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+    .toc a{
+      display:block;
+      padding:8px 10px;
+      border-radius:12px;
+      color:var(--text);
+      border:1px solid transparent;
+      font-size: 14px;
+      line-height:1.35;
+    }
+    .toc a:hover{
+      background: rgba(255,255,255,.06);
+      border-color: var(--border);
+      text-decoration:none;
+    }
+
+    .content{display:flex; flex-direction:column; gap:12px;}
+    .card{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.45);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-header{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: rgba(15,23,48,.55);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .card-title{margin:0; font-size:16px; line-height:1.35}
+    .tag{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      padding:4px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .card-body{
+      padding:14px 16px 16px;
+      color:var(--text);
+      line-height:1.65;
+      font-size:14.5px;
+    }
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .grid2{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+      margin-top:10px;
+    }
+    .box{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      background: rgba(0,0,0,.20);
+    }
+    .box h3{margin:0 0 6px; font-size:14px}
+    .box p{margin:0; color:var(--muted); font-size:13.5px; line-height:1.55}
+
+    details{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:10px 12px;
+      margin:12px 0 0;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:900;
+      color:var(--text);
+      list-style:none;
+      user-select:none;
+    }
+    summary::-webkit-details-marker{display:none}
+    summary:before{content:"▸"; margin-right:8px; color:var(--muted)}
+    details[open] summary:before{content:"▾"}
+
+    .codeblock pre{
+      margin:10px 0 0;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.32);
+      overflow:auto;
+      padding: 14px 12px 12px;
+      position: relative;
+    }
+    .codeblock code{
+      font-family: var(--mono);
+      font-size: 12.6px;
+      line-height: 1.55;
+      white-space: pre;
+      display:block;
+    }
+    .copy-btn{
+      position:absolute;
+      top:10px;
+      right:10px;
+      padding:6px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+      user-select:none;
+    }
+    .copy-btn:hover{background: rgba(255,255,255,.10)}
+
+    .pillrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      font-weight:900;
+      font-size:13px;
+    }
+    .pill:hover{background: rgba(255,255,255,.10); text-decoration:none}
+
+    .warn{
+      border-left: 4px solid rgba(255, 180, 90, .9);
+      padding: 10px 12px;
+      background: rgba(255, 180, 90, .08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    .ok{
+      border-left: 4px solid rgba(112,255,209,.9);
+      padding: 10px 12px;
+      background: rgba(112,255,209,.08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+      margin-top:10px;
+    }
+    th, td{
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+      font-size:13.5px;
+      line-height:1.45;
+    }
+    th{
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-weight:900;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    tr:last-child td{border-bottom:none}
+
+    ul{margin: 8px 0 0 18px}
+    li{margin: 4px 0}
+
+    @media (max-width: 1100px){
+      main{grid-template-columns:1fr}
+      nav{position:relative; height:auto}
+      .grid2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="hero">
+    <h1>10x Modalities Course</h1>
+    <p class="subtitle">
+      This course explains <b>what each 10x modality measures</b>, <b>what files you get</b>, <b>what QC metrics matter</b>,
+      and <b>how downstream analysis changes</b> for:
+      <b>GEX</b> (Gene Expression), <b>Multiome RNA+ATAC</b>, <b>CITE-seq/HTO</b>, and <b>VDJ</b>.
+      It’s written as a “methods + SOP” you can publish on GitHub Pages.
+    </p>
+
+    <div class="kicker">How to use this page</div>
+    <p class="subtitle">
+      Use the left navigation to follow the lessons in order, or jump directly to the modality you need.
+      All code blocks have a copy button.
+    </p>
+
+    <div class="top-actions">
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Filter content (e.g., 'WNN', 'Signac', 'HTODemux', 'clonotype', 'peak calling')…" />
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+      <button class="btn" id="copyLink">Copy page link</button>
+    </div>
+
+    <div class="pillrow">
+      <a class="pill" href="#cheatsheet">Cheat sheet</a>
+      <a class="pill" href="#gex">GEX</a>
+      <a class="pill" href="#multiome">Multiome RNA+ATAC</a>
+      <a class="pill" href="#cite">CITE-seq / HTO</a>
+      <a class="pill" href="#vdj">VDJ</a>
+      <a class="pill" href="#howtochoose">How to choose</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav>
+    <h2>Course map</h2>
+    <div class="toc">
+      <a href="#cheatsheet">1) Cheat sheet (fast comparison)</a>
+      <a href="#coreconcepts">2) Core concepts (barcodes, UMIs, droplets)</a>
+      <a href="#outputs">3) What files you get (Cell Ranger outputs)</a>
+      <a href="#howtochoose">4) Which modality should you use?</a>
+      <a href="#gex">5) GEX: end-to-end overview</a>
+      <a href="#gex_qc">6) GEX QC: what matters</a>
+      <a href="#gex_pipeline">7) GEX pipeline: Cell Ranger → Seurat/Scanpy</a>
+      <a href="#multiome">8) Multiome RNA+ATAC: end-to-end overview</a>
+      <a href="#multiome_qc">9) Multiome QC: RNA + ATAC metrics</a>
+      <a href="#multiome_pipeline">10) Multiome pipeline: Cell Ranger ARC → Seurat/Signac or muon</a>
+      <a href="#cite">11) CITE-seq/HTO: end-to-end overview</a>
+      <a href="#cite_qc">12) CITE/HTO QC: ADT & hashing</a>
+      <a href="#cite_pipeline">13) CITE pipeline: Cell Ranger multi → WNN → HTO demux</a>
+      <a href="#vdj">14) VDJ: end-to-end overview</a>
+      <a href="#vdj_qc">15) VDJ QC: contigs, productive chains, clonotypes</a>
+      <a href="#vdj_pipeline">16) VDJ pipeline: cellranger vdj/multi → scRepertoire/scirpy</a>
+      <a href="#integration">17) Integration across modalities (what is safe)</a>
+      <a href="#reporting">18) What to report in Methods</a>
+      <a href="#links">19) Tool links</a>
+    </div>
+  </nav>
+
+  <section class="content">
+
+    <!-- Cheat sheet -->
+    <article class="card topic" id="cheatsheet" data-keywords="cheat sheet comparison gex multiome cite seq hto vdj">
+      <div class="card-header">
+        <h2 class="card-title">1) Cheat sheet: GEX vs Multiome vs CITE/HTO vs VDJ</h2>
+        <span class="tag">High-level comparison</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Modality</th>
+              <th>What you measure</th>
+              <th>Primary questions it answers</th>
+              <th>Core output objects</th>
+              <th>QC metrics that matter most</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>GEX</b> (scRNA-seq)</td>
+              <td>mRNA counts per cell (UMI)</td>
+              <td>Cell types/states, pathways, differential expression, trajectories</td>
+              <td>Gene×cell matrix + barcodes + optionally BAM</td>
+              <td>nUMI, nGene, % mito, doublets, ambient RNA</td>
+            </tr>
+            <tr>
+              <td><b>Multiome</b> (RNA+ATAC)</td>
+              <td>mRNA + chromatin accessibility in the <i>same cells</i></td>
+              <td>Regulatory programs, peak→gene links, TF motifs, cell-type regulatory states</td>
+              <td>RNA matrix + ATAC peak×cell matrix + fragments.tsv.gz</td>
+              <td>RNA QC + ATAC QC (TSS enrichment, FRiP, nucleosome signal), barcode matching</td>
+            </tr>
+            <tr>
+              <td><b>CITE-seq</b> (GEX+ADT)</td>
+              <td>mRNA + antibody-derived tags (surface proteins)</td>
+              <td>More accurate immune phenotyping, protein/RNA discordance, better annotation</td>
+              <td>RNA matrix + ADT matrix (Feature Barcode)</td>
+              <td>ADT background, CLR distributions, isotype controls, doublets</td>
+            </tr>
+            <tr>
+              <td><b>HTO</b> (hashing)</td>
+              <td>Sample identity tags per cell (often with GEX±ADT)</td>
+              <td>Multiplex samples, reduce batch effects/cost, detect multiplets</td>
+              <td>HTO matrix + demultiplex labels</td>
+              <td>HTO separation, singlet/doublet/unassigned rates, cross-talk</td>
+            </tr>
+            <tr>
+              <td><b>VDJ</b> (TCR/BCR)</td>
+              <td>TCR/BCR sequences + clonotypes (optionally linked to GEX)</td>
+              <td>Clonal expansion, repertoire diversity, antigen-driven selection, clonotype states</td>
+              <td>Contig annotations + clonotypes + AIRR-like exports</td>
+              <td>Productive contigs, chain pairing rates, contamination, multiplets</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="ok">
+          <b>Key idea:</b> choose the modality based on the biology you need to observe, not based on “what’s newest.”
+          Each adds cost/complexity but unlocks specific biological questions.
+        </div>
+      </div>
+    </article>
+
+    <!-- Core concepts -->
+    <article class="card topic" id="coreconcepts" data-keywords="barcodes umis droplets cell barcode umi feature barcode library chemistry">
+      <div class="card-header">
+        <h2 class="card-title">2) Core concepts you must understand</h2>
+        <span class="tag">Foundations</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Cell barcode vs UMI</h3>
+            <p>
+              <b>Cell barcode</b> identifies the droplet/cell. <b>UMI</b> identifies a unique captured molecule (removes PCR duplicates).
+              Your primary count matrix is typically <b>UMI counts</b>.
+            </p>
+          </div>
+          <div class="box">
+            <h3>Feature barcodes</h3>
+            <p>
+              In CITE-seq/HTO, “features” aren’t genes—they’re <b>antibody tags</b> or <b>hash tags</b>.
+              These form separate matrices and have different normalization/QC than RNA.
+            </p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>Droplet realities (what goes wrong)</summary>
+          <ul>
+            <li><b>Ambient RNA</b>: free-floating transcripts leak into droplets → low-level “ghost” expression.</li>
+            <li><b>Doublets/multiplets</b>: two cells in one droplet → mixed markers and inflated counts.</li>
+            <li><b>Batch effects</b>: chemistry/run/library prep changes → embedding splits by batch.</li>
+            <li><b>Confounding</b>: if batch correlates with condition, “correction” can erase biology.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Outputs -->
+    <article class="card topic" id="outputs" data-keywords="outputs cellranger filtered_feature_bc_matrix raw_feature_bc_matrix web_summary metrics fragments contigs">
+      <div class="card-header">
+        <h2 class="card-title">3) What files you get (and why they matter)</h2>
+        <span class="tag">Data products</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Common outputs (GEX / CITE / HTO)</summary>
+          <ul>
+            <li><code>filtered_feature_bc_matrix/</code> → typical starting point for analysis</li>
+            <li><code>raw_feature_bc_matrix/</code> → useful for ambient RNA estimation</li>
+            <li><code>web_summary.html</code> + <code>metrics_summary.csv</code> → key sample-level QC</li>
+            <li><code>possorted_genome_bam.bam</code> → useful for deeper QC and velocity</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Multiome-specific outputs</summary>
+          <ul>
+            <li><code>filtered_feature_bc_matrix/</code> (RNA)</li>
+            <li><code>filtered_peak_bc_matrix/</code> (ATAC peaks)</li>
+            <li><code>fragments.tsv.gz</code> (ATAC fragments per cell; required for motif/TSS/peak QC)</li>
+            <li><code>atac_possorted_bam.bam</code> (ATAC alignments)</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>VDJ-specific outputs</summary>
+          <ul>
+            <li><code>filtered_contig_annotations.csv</code> → per-cell contigs</li>
+            <li><code>clonotypes.csv</code> → clonotype definitions</li>
+            <li><code>all_contig.fasta</code> → sequences</li>
+            <li>Optional linkage to GEX via shared cell barcodes</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- How to choose -->
+    <article class="card topic" id="howtochoose" data-keywords="choose modality decision tree cost complexity questions">
+      <div class="card-header">
+        <h2 class="card-title">4) Which modality should you use?</h2>
+        <span class="tag">Decision guidance</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Pick GEX if…</h3>
+            <p>
+              Your main goal is cell types/states, pathway activity, DE between conditions, and you don’t need direct regulatory (ATAC) or protein-level (ADT) info.
+            </p>
+          </div>
+          <div class="box">
+            <h3>Pick Multiome if…</h3>
+            <p>
+              You need gene expression <b>and</b> regulatory accessibility in the same cells (TF motifs, enhancers, peak→gene links).
+            </p>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="box">
+            <h3>Pick CITE-seq if…</h3>
+            <p>
+              You’re profiling immune cells and want high-confidence phenotyping, or expect RNA/protein discordance (e.g., activation markers).
+            </p>
+          </div>
+          <div class="box">
+            <h3>Pick VDJ if…</h3>
+            <p>
+              You need clonal structure (TCR/BCR), expansion, repertoire diversity, or antigen-driven responses, ideally linked to cell states from GEX.
+            </p>
+          </div>
+        </div>
+
+        <div class="warn">
+          <b>Hashing (HTO)</b> is often a “multiplier”:
+          it reduces batch effects and cost, but demands careful demultiplex QC. It can be used with GEX and CITE-seq.
+        </div>
+      </div>
+    </article>
+
+    <!-- GEX overview -->
+    <article class="card topic" id="gex" data-keywords="gex scrna-seq gene expression pipeline seurat scanpy">
+      <div class="card-header">
+        <h2 class="card-title">5) GEX (scRNA-seq): what it is and what changes in analysis</h2>
+        <span class="tag">RNA-only</span>
+      </div>
+      <div class="card-body">
+        <div class="kicker">You measure</div>
+        <p class="muted">UMI counts of transcripts per cell (with cell barcodes + UMIs). You do not directly measure proteins or chromatin state.</p>
+
+        <details open>
+          <summary>Typical analysis flow</summary>
+          <ul>
+            <li>Cell Ranger <code>count</code> → filtered gene×cell matrix</li>
+            <li>Cell-level QC → remove empty droplets, dead cells, extreme outliers</li>
+            <li>Normalization (e.g., SCTransform / log-normalization) + HVGs</li>
+            <li>PCA → neighbors → clustering → UMAP</li>
+            <li>Markers per cluster → cell type annotation</li>
+            <li>DE (prefer pseudobulk for inference)</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- GEX QC -->
+    <article class="card topic" id="gex_qc" data-keywords="gex qc mito ribo genes umis doublets ambient">
+      <div class="card-header">
+        <h2 class="card-title">6) GEX QC: what to check (cell-level + sample-level)</h2>
+        <span class="tag">QC essentials</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Cell-level QC metrics</summary>
+          <ul>
+            <li><b>nUMI</b> (total counts per cell): low → empty/ambient; high → doublets</li>
+            <li><b>nGene</b> (features per cell): low → low complexity; high → doublets</li>
+            <li><b>% mitochondrial</b> (MT-): high can indicate stress/death (tissue dependent)</li>
+            <li><b>% ribosomal</b> (RPL/RPS): can indicate technical shifts/stress programs</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Sample-level QC (from Cell Ranger web summary)</summary>
+          <ul>
+            <li>Estimated cells; median genes/cell; fraction reads in cells</li>
+            <li>Sequencing saturation (under-sequencing vs diminishing returns)</li>
+            <li>Mapping rates and intronic/intergenic fractions</li>
+          </ul>
+        </details>
+
+        <div class="ok">
+          <b>Threshold tip:</b> use distribution-aware cutoffs per sample/donor (quantiles/MAD) rather than fixed numbers.
+        </div>
+      </div>
+    </article>
+
+    <!-- GEX pipeline -->
+    <article class="card topic" id="gex_pipeline" data-keywords="gex pipeline cellranger count seurat scanpy code">
+      <div class="card-header">
+        <h2 class="card-title">7) GEX pipeline code: Cell Ranger → Seurat/Scanpy</h2>
+        <span class="tag">Code templates</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Cell Ranger (GEX): <code>cellranger count</code> template</summary>
+          <div class="codeblock" data-src="code-cellranger-count" data-lang="bash"></div>
+        </details>
+        <details>
+          <summary>Seurat (GEX): minimal analysis skeleton</summary>
+          <div class="codeblock" data-src="code-seurat-gex-min" data-lang="r"></div>
+        </details>
+        <details>
+          <summary>Scanpy (GEX): minimal analysis skeleton</summary>
+          <div class="codeblock" data-src="code-scanpy-gex-min" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Multiome overview -->
+    <article class="card topic" id="multiome" data-keywords="multiome rna atac chromatin accessibility peaks fragments tss frip">
+      <div class="card-header">
+        <h2 class="card-title">8) Multiome (RNA + ATAC): what it is and what changes in analysis</h2>
+        <span class="tag">Two modalities, same cells</span>
+      </div>
+      <div class="card-body">
+        <div class="kicker">You measure</div>
+        <p class="muted">
+          In each cell you measure <b>RNA expression</b> AND <b>chromatin accessibility</b>.
+          This enables regulatory interpretation: TF motifs, enhancer accessibility, and peak→gene associations.
+        </p>
+
+        <details open>
+          <summary>What changes vs GEX?</summary>
+          <ul>
+            <li>You have <b>two matrices</b>: RNA (gene×cell) and ATAC (peak×cell) + <code>fragments.tsv.gz</code>.</li>
+            <li>ATAC QC is separate: TSS enrichment, FRiP, nucleosome signal, peak counts.</li>
+            <li>Integration often uses <b>WNN</b> (weighted nearest neighbors) combining RNA and ATAC neighborhoods.</li>
+            <li>Downstream includes motif enrichment, peak calling strategy, peak→gene link modeling.</li>
+          </ul>
+        </details>
+
+        <div class="warn">
+          <b>ATAC data are sparse.</b> Many “weird clusters” are QC artifacts (low TSS/FRiP) rather than biology.
+        </div>
+      </div>
+    </article>
+
+    <!-- Multiome QC -->
+    <article class="card topic" id="multiome_qc" data-keywords="multiome qc tss enrichment frip nucleosome signal atac depth">
+      <div class="card-header">
+        <h2 class="card-title">9) Multiome QC: what matters for RNA and ATAC</h2>
+        <span class="tag">Dual QC</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>RNA-side QC (same as GEX)</summary>
+          <ul>
+            <li>nUMI, nGene, % mito; doublets; ambient RNA</li>
+          </ul>
+        </details>
+        <details open>
+          <summary>ATAC-side QC (must-have)</summary>
+          <ul>
+            <li><b>TSS enrichment</b>: signal around transcription start sites (higher is better)</li>
+            <li><b>FRiP</b> (Fraction of Reads in Peaks): low indicates noisy/open chromatin background</li>
+            <li><b>Nucleosome signal</b>: high can indicate low-quality / apoptotic signal</li>
+            <li><b>Peak fragments</b> per cell: too low = insufficient signal</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Common filtering logic</summary>
+          <ul>
+            <li>Filter extreme low ATAC cells first (low fragments + low TSS)</li>
+            <li>Then assess RNA QC; finally check embedding by QC metrics</li>
+            <li>Doublets can show unusually high RNA+ATAC simultaneously</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Multiome pipeline -->
+    <article class="card topic" id="multiome_pipeline" data-keywords="cellranger arc signac wnn muon atac pipeline code">
+      <div class="card-header">
+        <h2 class="card-title">10) Multiome pipeline code: Cell Ranger ARC → Seurat/Signac or muon</h2>
+        <span class="tag">Code templates</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Cell Ranger ARC: <code>cellranger-arc count</code> template</summary>
+          <div class="codeblock" data-src="code-cellranger-arc-count" data-lang="bash"></div>
+        </details>
+        <details open>
+          <summary>Seurat + Signac (Multiome): WNN skeleton</summary>
+          <div class="codeblock" data-src="code-signac-wnn" data-lang="r"></div>
+        </details>
+        <details>
+          <summary>Python (Multiome): muon skeleton</summary>
+          <div class="codeblock" data-src="code-muon-min" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- CITE/HTO overview -->
+    <article class="card topic" id="cite" data-keywords="cite-seq adt protein feature barcode hto hashing multiplex demux wnn">
+      <div class="card-header">
+        <h2 class="card-title">11) CITE-seq / HTO: what it is and what changes in analysis</h2>
+        <span class="tag">RNA + protein tags (+ sample tags)</span>
+      </div>
+      <div class="card-body">
+        <div class="kicker">You measure</div>
+        <ul>
+          <li><b>CITE-seq (ADT)</b>: antibody-derived tags → relative abundance of surface proteins.</li>
+          <li><b>HTO hashing</b>: tags that assign cells to a sample (and detect multiplets).</li>
+        </ul>
+
+        <details open>
+          <summary>What changes vs GEX?</summary>
+          <ul>
+            <li>You have <b>multiple assays</b>: RNA and ADT (and optionally HTO).</li>
+            <li>Normalization differs: RNA typically SCTransform/log; ADT commonly CLR (centered log ratio) per cell.</li>
+            <li>Integration can use <b>WNN</b> (RNA+ADT) to improve cell typing.</li>
+            <li>Hashing adds a demultiplexing step: singlet vs doublet vs negative/unassigned.</li>
+          </ul>
+        </details>
+
+        <div class="ok">
+          <b>Why CITE-seq helps:</b> surface proteins can separate cell types that look similar in RNA (or when RNA is sparse).
+        </div>
+      </div>
+    </article>
+
+    <!-- CITE QC -->
+    <article class="card topic" id="cite_qc" data-keywords="cite qc adt background clr isotype controls hto demultiplex">
+      <div class="card-header">
+        <h2 class="card-title">12) CITE/HTO QC: what matters (and common failure modes)</h2>
+        <span class="tag">Tag-specific QC</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>ADT QC</summary>
+          <ul>
+            <li>Check distributions of ADT counts per antibody (some are always background-y).</li>
+            <li>Use isotype controls if available; confirm expected marker patterns on known cell types.</li>
+            <li>Normalize with CLR and check ridge/violin plots per marker.</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>HTO QC</summary>
+          <ul>
+            <li>Do tags separate cleanly into singlets? High “unassigned” suggests weak staining.</li>
+            <li>Doublet rate from HTO is informative and can complement RNA doublet detection.</li>
+            <li>Batch/staining differences can shift thresholds: prefer algorithmic demux rather than manual lines.</li>
+          </ul>
+        </details>
+
+        <div class="warn">
+          <b>Important:</b> HTO demultiplex is a “gate.” If it’s wrong, everything downstream is wrong.
+          Always visualize HTO separation and check known sample proportions.
+        </div>
+      </div>
+    </article>
+
+    <!-- CITE pipeline -->
+    <article class="card topic" id="cite_pipeline" data-keywords="cellranger multi cite-seq hto config wnn htodemux">
+      <div class="card-header">
+        <h2 class="card-title">13) CITE/HTO pipeline code: cellranger multi → WNN → HTO demux</h2>
+        <span class="tag">Code templates</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Cell Ranger multi config template (GEX + ADT + optional HTO)</summary>
+          <div class="codeblock" data-src="code-cellranger-multi-config" data-lang="text"></div>
+          <div class="codeblock" data-src="code-cellranger-multi-run" data-lang="bash"></div>
+        </details>
+
+        <details open>
+          <summary>Seurat: RNA+ADT WNN + HTO demultiplex (skeleton)</summary>
+          <div class="codeblock" data-src="code-seurat-cite-hto" data-lang="r"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- VDJ overview -->
+    <article class="card topic" id="vdj" data-keywords="vdj tcr bcr repertoire clonotypes contigs immune sequencing">
+      <div class="card-header">
+        <h2 class="card-title">14) VDJ: what it is and what changes in analysis</h2>
+        <span class="tag">Immune repertoire</span>
+      </div>
+      <div class="card-body">
+        <div class="kicker">You measure</div>
+        <p class="muted">
+          Full-length V(D)J sequences of TCR or BCR chains, enabling clonotype identification and diversity analysis.
+          When paired with GEX (common), you link <b>clone</b> ↔ <b>cell state</b>.
+        </p>
+
+        <details open>
+          <summary>What changes vs GEX?</summary>
+          <ul>
+            <li>You analyze sequences/contigs and define clonotypes (not just gene counts).</li>
+            <li>QC includes chain productivity and pairing rates (alpha/beta for TCR; heavy/light for BCR).</li>
+            <li>Downstream includes clonal expansion, diversity metrics, lineage trees (BCR SHM), and clone-state relationships.</li>
+          </ul>
+        </details>
+
+        <div class="ok">
+          <b>Typical deliverable:</b> per-donor clonal expansion summaries + UMAP colored by clonotype size + DE between expanded vs non-expanded cells.
+        </div>
+      </div>
+    </article>
+
+    <!-- VDJ QC -->
+    <article class="card topic" id="vdj_qc" data-keywords="vdj qc productive contigs pairing rate contamination multiplets">
+      <div class="card-header">
+        <h2 class="card-title">15) VDJ QC: what matters</h2>
+        <span class="tag">Sequence QC</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Core VDJ QC checks</summary>
+          <ul>
+            <li><b>Productive</b> contigs fraction (in-frame, no stop codons)</li>
+            <li><b>Pairing</b>: do cells have expected chain pairs (e.g., TRB+TRA)?</li>
+            <li><b>Multi-chain</b> cells: too many chains can indicate multiplets or biology (rare; validate)</li>
+            <li><b>Contamination</b>: unexpected chains across samples; check barcodes and demux</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Common interpretation pitfalls</summary>
+          <ul>
+            <li>Expanded clonotypes can reflect biology OR sample processing bias (check per-donor composition).</li>
+            <li>“Public” clonotypes require careful definition and consistent chain calling.</li>
+            <li>BCR lineage trees require SHM-aware analysis and can be sensitive to alignment/annotation choices.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- VDJ pipeline -->
+    <article class="card topic" id="vdj_pipeline" data-keywords="cellranger vdj scirpy screpertoire clonotypes integration">
+      <div class="card-header">
+        <h2 class="card-title">16) VDJ pipeline code: cellranger vdj/multi → scRepertoire/scirpy</h2>
+        <span class="tag">Code templates</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Cell Ranger VDJ run template</summary>
+          <div class="codeblock" data-src="code-cellranger-vdj" data-lang="bash"></div>
+        </details>
+        <details open>
+          <summary>R: scRepertoire skeleton (link VDJ to Seurat)</summary>
+          <div class="codeblock" data-src="code-screpertoire-min" data-lang="r"></div>
+        </details>
+        <details>
+          <summary>Python: scirpy skeleton (VDJ + AnnData)</summary>
+          <div class="codeblock" data-src="code-scirpy-min" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Integration across modalities -->
+    <article class="card topic" id="integration" data-keywords="integration wnn totalvi scanvi label transfer multiome cite vdj">
+      <div class="card-header">
+        <h2 class="card-title">17) Integration across modalities: what is safe (and what is risky)</h2>
+        <span class="tag">Best practices</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Safe patterns</summary>
+          <ul>
+            <li><b>WNN</b> for Multiome (RNA+ATAC) and CITE-seq (RNA+ADT)</li>
+            <li>Reference-based label transfer to annotate new datasets (treat as suggestions, validate with markers)</li>
+            <li>VDJ linking: clonotype metadata attached to cells (no “correction” needed)</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Risky patterns</summary>
+          <ul>
+            <li>Batch correction when batch is confounded with biology (case/control split by run)</li>
+            <li>Integrating datasets with different chemistries/annotations without careful harmonization</li>
+            <li>Over-correcting accessibility data (ATAC) such that true regulatory differences vanish</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Reporting -->
+    <article class="card topic" id="reporting" data-keywords="methods reporting qc thresholds software versions reference genome">
+      <div class="card-header">
+        <h2 class="card-title">18) What to report in Methods (publication checklist)</h2>
+        <span class="tag">Methods-ready</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Always report</summary>
+          <ul>
+            <li>10x assay type/chemistry, sample handling, and library prep details</li>
+            <li>Alignment reference genome + annotation version</li>
+            <li>Cell Ranger/ARC/multi/vdj version and key parameters</li>
+            <li>QC thresholds (how chosen) + cells retained per sample</li>
+            <li>Doublet and ambient RNA handling (methods + rates)</li>
+            <li>Normalization, integration method (if used), clustering resolution, marker method</li>
+            <li>DE strategy: single-cell vs pseudobulk; experimental unit definition</li>
+          </ul>
+        </details>
+        <div class="ok">
+          <b>Best practice:</b> keep a <code>logs/</code> folder with exact command lines and a <code>versions.txt</code> file.
+        </div>
+      </div>
+    </article>
+
+    <!-- Links -->
+    <article class="card topic" id="links" data-keywords="links 10x cellranger seurat signac scanpy muon scvi totalvi scirpy">
+      <div class="card-header">
+        <h2 class="card-title">19) Tool links (official/common)</h2>
+        <span class="tag">Docs</span>
+      </div>
+      <div class="card-body">
+        <div class="pillrow">
+          <a class="pill" href="https://www.10xgenomics.com/support/software/cell-ranger" target="_blank" rel="noopener">Cell Ranger</a>
+          <a class="pill" href="https://www.10xgenomics.com/support/software/cell-ranger-arc" target="_blank" rel="noopener">Cell Ranger ARC (Multiome)</a>
+          <a class="pill" href="https://www.10xgenomics.com/support/software/cell-ranger/latest/analysis/running-pipelines" target="_blank" rel="noopener">10x: running pipelines</a>
+          <a class="pill" href="https://satijalab.org/seurat/" target="_blank" rel="noopener">Seurat</a>
+          <a class="pill" href="https://stuartlab.org/signac/" target="_blank" rel="noopener">Signac (ATAC)</a>
+          <a class="pill" href="https://scanpy.readthedocs.io/" target="_blank" rel="noopener">Scanpy</a>
+          <a class="pill" href="https://muon.readthedocs.io/" target="_blank" rel="noopener">muon (multi-omics)</a>
+          <a class="pill" href="https://scvi-tools.org/" target="_blank" rel="noopener">scvi-tools (scVI/totalVI/scANVI)</a>
+          <a class="pill" href="https://scirpy.scverse.org/" target="_blank" rel="noopener">scirpy (VDJ)</a>
+          <a class="pill" href="https://github.com/BorchLab/scRepertoire" target="_blank" rel="noopener">scRepertoire (VDJ)</a>
+        </div>
+      </div>
+    </article>
+
+  </section>
+</main>
+
+<!-- =========================
+     CODE SNIPPETS (RAW TEXT)
+========================= -->
+
+<script type="text/plain" id="code-cellranger-count">
+# GEX: cellranger count (template)
+# Replace paths, sample names, and resources per your system.
+
+export PATH="/path/to/cellranger:$PATH"
+cellranger --version
+
+REF="refs/refdata-gex-GRCh38-XXXX"     # your 10x reference
+FASTQ_DIR="raw/fastq"
+SAMPLE="SAMPLE_001"
+
+mkdir -p logs cellranger_out
+
+cellranger count \
+  --id "${SAMPLE}" \
+  --transcriptome "${REF}" \
+  --fastqs "${FASTQ_DIR}" \
+  --sample "${SAMPLE}" \
+  --localcores 16 \
+  --localmem 64 \
+  2>&1 | tee "logs/cellranger_count_${SAMPLE}.log"
+
+mv "${SAMPLE}" "cellranger_out/${SAMPLE}"
+</script>
+
+<script type="text/plain" id="code-seurat-gex-min">
+# Seurat minimal GEX pipeline (single sample)
+library(Seurat)
+library(ggplot2)
+
+mat_dir <- "cellranger_out/SAMPLE_001/outs/filtered_feature_bc_matrix"
+so <- CreateSeuratObject(Read10X(mat_dir), project="SAMPLE_001")
+
+so[["percent.mt"]] <- PercentageFeatureSet(so, pattern="^MT-")
+
+VlnPlot(so, features=c("nFeature_RNA","nCount_RNA","percent.mt"), ncol=3)
+
+# Example filtering (tune!)
+so <- subset(so, subset = nFeature_RNA >= 200 & percent.mt <= 20)
+
+so <- NormalizeData(so)
+so <- FindVariableFeatures(so)
+so <- ScaleData(so, vars.to.regress="percent.mt")
+so <- RunPCA(so)
+so <- FindNeighbors(so, dims=1:30)
+so <- FindClusters(so, resolution=0.5)
+so <- RunUMAP(so, dims=1:30)
+
+DimPlot(so, label=TRUE) + NoLegend()
+markers <- FindAllMarkers(so, only.pos=TRUE)
+head(markers)
+</script>
+
+<script type="text/plain" id="code-scanpy-gex-min">
+# Scanpy minimal GEX pipeline (single sample)
+import scanpy as sc
+
+mat_dir = "cellranger_out/SAMPLE_001/outs/filtered_feature_bc_matrix"
+adata = sc.read_10x_mtx(mat_dir, var_names="gene_symbols")
+adata.var_names_make_unique()
+
+adata.var["mt"] = adata.var_names.str.startswith("MT-")
+sc.pp.calculate_qc_metrics(adata, qc_vars=["mt"], inplace=True)
+
+sc.pl.violin(adata, ["total_counts","n_genes_by_counts","pct_counts_mt"], jitter=0.4)
+
+# Example filtering (tune!)
+adata = adata[adata.obs["n_genes_by_counts"] >= 200].copy()
+adata = adata[adata.obs["pct_counts_mt"] <= 20].copy()
+
+sc.pp.normalize_total(adata, target_sum=1e4)
+sc.pp.log1p(adata)
+sc.pp.highly_variable_genes(adata, n_top_genes=3000, flavor="seurat_v3")
+adata = adata[:, adata.var["highly_variable"]].copy()
+
+sc.pp.scale(adata, max_value=10)
+sc.tl.pca(adata)
+sc.pp.neighbors(adata, n_neighbors=15, n_pcs=30)
+sc.tl.umap(adata)
+sc.tl.leiden(adata, resolution=0.5)
+
+sc.pl.umap(adata, color=["leiden","pct_counts_mt"])
+sc.tl.rank_genes_groups(adata, "leiden", method="wilcoxon")
+sc.pl.rank_genes_groups(adata, n_genes=20)
+</script>
+
+<script type="text/plain" id="code-cellranger-arc-count">
+# Multiome RNA+ATAC: cellranger-arc count (template)
+# You need a Cell Ranger ARC reference (RNA+ATAC) from 10x.
+
+export PATH="/path/to/cellranger-arc:$PATH"
+cellranger-arc --version
+
+REF="refs/refdata-cellranger-arc-GRCh38-XXXX"
+FASTQ_DIR="raw/fastq"
+SAMPLE="MULTIOME_001"
+
+mkdir -p logs cellranger_arc_out
+
+cellranger-arc count \
+  --id "${SAMPLE}" \
+  --reference "${REF}" \
+  --fastqs "${FASTQ_DIR}" \
+  --sample "${SAMPLE}" \
+  --localcores 16 \
+  --localmem 64 \
+  2>&1 | tee "logs/cellranger_arc_count_${SAMPLE}.log"
+
+mv "${SAMPLE}" "cellranger_arc_out/${SAMPLE}"
+
+# Key outputs:
+# - outs/filtered_feature_bc_matrix (RNA)
+# - outs/filtered_peak_bc_matrix (ATAC peaks)
+# - outs/atac_fragments.tsv.gz (fragments)
+</script>
+
+<script type="text/plain" id="code-signac-wnn">
+# Multiome (Seurat + Signac): WNN skeleton
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(Signac)
+  library(ggplot2)
+})
+
+# Paths from cellranger-arc output
+arc_out <- "cellranger_arc_out/MULTIOME_001/outs"
+rna_dir <- file.path(arc_out, "filtered_feature_bc_matrix")
+atac_dir <- file.path(arc_out, "filtered_peak_bc_matrix")
+frags   <- file.path(arc_out, "atac_fragments.tsv.gz")
+
+# Load RNA
+rna_counts <- Read10X(rna_dir)
+so <- CreateSeuratObject(rna_counts, assay="RNA")
+
+# Load ATAC peaks as ChromatinAssay
+atac_counts <- Read10X(atac_dir)
+chrom_assay <- CreateChromatinAssay(
+  counts = atac_counts,
+  sep = c(":", "-"),
+  fragments = frags
+)
+so[["ATAC"]] <- chrom_assay
+
+# ---- RNA preprocessing ----
+so <- SCTransform(so, assay="RNA", verbose=FALSE)
+so <- RunPCA(so, assay="SCT", reduction.name="pca_rna", verbose=FALSE)
+
+# ---- ATAC preprocessing ----
+DefaultAssay(so) <- "ATAC"
+so <- FindTopFeatures(so, min.cutoff = "q0")
+so <- RunTFIDF(so)
+so <- RunSVD(so, reduction.name="lsi", reduction.key="LSI_")
+
+# ---- WNN integration (RNA + ATAC) ----
+so <- FindMultiModalNeighbors(
+  so,
+  reduction.list = list("pca_rna", "lsi"),
+  dims.list = list(1:30, 2:30)  # often exclude LSI1
+)
+so <- RunUMAP(so, nn.name="weighted.nn", reduction.name="wnn.umap", reduction.key="wnnUMAP_")
+so <- FindClusters(so, graph.name="wsnn", algorithm=3, resolution=0.5)
+
+DimPlot(so, reduction="wnn.umap", group.by="seurat_clusters", label=TRUE)
+</script>
+
+<script type="text/plain" id="code-muon-min">
+# Multiome (Python): muon skeleton (RNA+ATAC)
+import muon as mu
+import scanpy as sc
+
+# Many workflows read 10x multiome outputs into MuData.
+# Your exact read function depends on file layout; muon supports 10x formats and h5.
+# If you have a 10x HDF5 file, prefer reading that. If you have mtx, you may read separately and merge.
+
+# Placeholder pattern:
+# mdata = mu.read_10x_h5("cellranger_arc_out/MULTIOME_001/outs/raw_feature_bc_matrix.h5")
+# mu.pp.filter_obs(mdata, "n_genes_by_counts", min=200)  # RNA filters
+
+# For ATAC: compute QC metrics like TSS/FRiP using fragments; muon/episcanpy workflows can be used.
+print("See muon docs for 10x multiome readers + ATAC QC workflows (TSS/FRiP require fragments.tsv.gz).")
+</script>
+
+<script type="text/plain" id="code-cellranger-multi-config">
+# cellranger multi config (template) for CITE-seq/HTO
+# This is a high-level example. The exact schema depends on your assay and 10x docs.
+
+[gene-expression]
+reference,refs/refdata-gex-GRCh38-XXXX
+
+[feature]
+reference,refs/feature_ref.csv
+
+[libraries]
+fastq_id,fastqs,feature_types
+LIB001,raw/fastq,Gene Expression
+LIB001,raw/fastq,Antibody Capture   # ADT
+LIB001,raw/fastq,Multiplexing Capture  # HTO (if present)
+
+[samples]
+sample_id,cmo_ids
+SAMPLE_A,CMO301
+SAMPLE_B,CMO302
+</script>
+
+<script type="text/plain" id="code-cellranger-multi-run">
+# CITE/HTO: run cellranger multi
+export PATH="/path/to/cellranger:$PATH"
+cellranger --version
+
+CONFIG="metadata/multi_config.csv"
+mkdir -p logs cellranger_multi_out
+
+cellranger multi \
+  --id CITE_RUN_001 \
+  --csv "${CONFIG}" \
+  --localcores 16 \
+  --localmem 64 \
+  2>&1 | tee "logs/cellranger_multi_CITE_RUN_001.log"
+
+mv CITE_RUN_001 cellranger_multi_out/CITE_RUN_001
+</script>
+
+<script type="text/plain" id="code-seurat-cite-hto">
+# Seurat skeleton: CITE-seq (ADT) + optional HTO demultiplex + WNN
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(ggplot2)
+})
+
+# Load 10x multi output (commonly returns a list of matrices: Gene Expression, Antibody Capture, etc.)
+mat_dir <- "cellranger_multi_out/CITE_RUN_001/outs/filtered_feature_bc_matrix"
+data <- Read10X(mat_dir)
+
+# Typical names include: "Gene Expression", "Antibody Capture", and maybe "Multiplexing Capture"
+rna <- data[["Gene Expression"]]
+adt <- data[["Antibody Capture"]]
+
+so <- CreateSeuratObject(rna, assay="RNA")
+so[["ADT"]] <- CreateAssayObject(adt)
+
+# RNA QC
+so[["percent.mt"]] <- PercentageFeatureSet(so, pattern="^MT-")
+VlnPlot(so, features=c("nFeature_RNA","nCount_RNA","percent.mt"), ncol=3)
+
+# Normalize
+so <- SCTransform(so, assay="RNA", verbose=FALSE)
+
+# ADT normalization (CLR per cell is common)
+so <- NormalizeData(so, assay="ADT", normalization.method="CLR")
+
+# Dimensional reductions per modality
+so <- RunPCA(so, assay="SCT", reduction.name="pca_rna", verbose=FALSE)
+so <- RunPCA(so, assay="ADT", reduction.name="pca_adt", verbose=FALSE)
+
+# WNN on RNA+ADT
+so <- FindMultiModalNeighbors(
+  so,
+  reduction.list=list("pca_rna","pca_adt"),
+  dims.list=list(1:30, 1:18)
+)
+so <- RunUMAP(so, nn.name="weighted.nn", reduction.name="wnn.umap", reduction.key="wnnUMAP_")
+so <- FindClusters(so, graph.name="wsnn", algorithm=3, resolution=0.5)
+
+DimPlot(so, reduction="wnn.umap", label=TRUE)
+
+# ---- Optional: HTO demultiplex (if you have HTO) ----
+# hto <- data[["Multiplexing Capture"]]
+# so[["HTO"]] <- CreateAssayObject(hto)
+# so <- NormalizeData(so, assay="HTO", normalization.method="CLR")
+# so <- HTODemux(so, assay="HTO", positive.quantile=0.99)
+# table(so$HTO_classification.global)
+</script>
+
+<script type="text/plain" id="code-cellranger-vdj">
+# VDJ: cellranger vdj (template)
+export PATH="/path/to/cellranger:$PATH"
+cellranger --version
+
+REF_VDJ="refs/refdata-cellranger-vdj-GRCh38-alts-ensembl-XXXX"
+FASTQ_DIR="raw/fastq"
+SAMPLE="VDJ_001"
+
+mkdir -p logs cellranger_vdj_out
+
+cellranger vdj \
+  --id "${SAMPLE}" \
+  --reference "${REF_VDJ}" \
+  --fastqs "${FASTQ_DIR}" \
+  --sample "${SAMPLE}" \
+  --localcores 16 \
+  --localmem 64 \
+  2>&1 | tee "logs/cellranger_vdj_${SAMPLE}.log"
+
+mv "${SAMPLE}" "cellranger_vdj_out/${SAMPLE}"
+
+# Outputs include filtered_contig_annotations.csv and clonotypes.csv
+</script>
+
+<script type="text/plain" id="code-screpertoire-min">
+# R: scRepertoire minimal skeleton (VDJ linked to Seurat)
+# install.packages("remotes"); remotes::install_github("BorchLab/scRepertoire")
+library(scRepertoire)
+library(Seurat)
+
+# Load Seurat object (GEX)
+# so <- readRDS("analysis/seurat_object.rds")
+
+# Load VDJ contigs (10x output)
+contigs <- read.csv("cellranger_vdj_out/VDJ_001/outs/filtered_contig_annotations.csv")
+
+# Combine TCR/BCR (choose chain type according to your data)
+# For TCR:
+tcr <- combineTCR(contigs, samples="SAMPLE_001", cells="T-AB")
+
+# Add clonotype info to Seurat
+# so <- combineExpression(tcr, so, cloneCall="aa", groupBy="sample_id")
+
+# Then visualize:
+# DimPlot(so, group.by="clonotype")  # or cloneSize, etc.
+</script>
+
+<script type="text/plain" id="code-scirpy-min">
+# Python: scirpy minimal skeleton (VDJ + AnnData)
+import scanpy as sc
+import scirpy as ir
+
+# Load an AnnData with GEX
+# adata = sc.read_h5ad("analysis/scanpy_gex.h5ad")
+
+# Import 10x VDJ outputs (scirpy has readers; you may convert to AIRR format depending on your setup)
+# Example concept:
+# ir.io.read_10x_vdj(adata, "cellranger_vdj_out/VDJ_001/outs/filtered_contig_annotations.csv")
+
+# Then compute clonotypes and visualize:
+# ir.tl.chain_qc(adata)
+# ir.tl.define_clonotypes(adata, receptor_arms="all", dual_ir="primary_only")
+# ir.pl.clonal_expansion(adata, groupby="condition")
+print("Use scirpy docs for the exact reader and clonotype definitions for your chain types.")
+</script>
+
+<script>
+  // Render codeblocks from <script type="text/plain"> sources
+  function renderCodeblocks(){
+    document.querySelectorAll(".codeblock").forEach(el => {
+      const src = el.getAttribute("data-src");
+      const node = document.getElementById(src);
+      if(!node) return;
+      const text = node.textContent.replace(/^\n+|\n+$/g, "");
+
+      const pre = document.createElement("pre");
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+
+      const code = document.createElement("code");
+      code.textContent = text;
+
+      btn.addEventListener("click", async () => {
+        try{
+          await navigator.clipboard.writeText(text);
+          const old = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(()=>btn.textContent=old, 900);
+        }catch(e){
+          btn.textContent = "Copy failed";
+          setTimeout(()=>btn.textContent="Copy", 900);
+        }
+      });
+
+      pre.appendChild(btn);
+      pre.appendChild(code);
+      el.appendChild(pre);
+    });
+  }
+
+  // Search filter across .topic cards
+  function setupSearch(){
+    const input = document.getElementById("search");
+    const topics = () => Array.from(document.querySelectorAll(".topic"));
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      topics().forEach(t => {
+        const kw = (t.getAttribute("data-keywords") || "").toLowerCase();
+        const text = t.innerText.toLowerCase();
+        const show = !q || kw.includes(q) || text.includes(q);
+        t.style.display = show ? "" : "none";
+      });
+    });
+  }
+
+  // Expand/collapse all details
+  function setupExpandCollapse(){
+    const allDetails = () => Array.from(document.querySelectorAll("details"));
+    document.getElementById("expandAll").addEventListener("click", () => allDetails().forEach(d => d.open = true));
+    document.getElementById("collapseAll").addEventListener("click", () => allDetails().forEach(d => d.open = false));
+  }
+
+  // Copy page link
+  function setupCopyLink(){
+    const btn = document.getElementById("copyLink");
+    btn.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(window.location.href);
+        const old = btn.textContent;
+        btn.textContent = "Link copied!";
+        setTimeout(()=>btn.textContent=old, 900);
+      }catch(e){
+        btn.textContent = "Copy failed";
+        setTimeout(()=>btn.textContent="Copy page link", 900);
+      }
+    });
+  }
+
+  // Smooth scroll
+  function setupSmoothScroll(){
+    document.querySelectorAll(".toc a, .pillrow a").forEach(a => {
+      a.addEventListener("click", (e) => {
+        const href = a.getAttribute("href");
+        if(!href || !href.startsWith("#")) return;
+        const target = document.querySelector(href);
+        if(!target) return;
+        e.preventDefault();
+        target.scrollIntoView({behavior:"smooth", block:"start"});
+        history.pushState(null, "", href);
+      });
+    });
+  }
+
+  renderCodeblocks();
+  setupSearch();
+  setupExpandCollapse();
+  setupCopyLink();
+  setupSmoothScroll();
+</script>
+</body>
+</html>
