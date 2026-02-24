@@ -1,1 +1,1675 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>10x Single-Cell RNA-seq: End-to-End Analysis Pipeline (Cell Ranger → Seurat / Scanpy)</title>
+  <meta name="description" content="A very detailed end-to-end analytical pipeline and code for 10x Genomics single-cell RNA-seq: Cell Ranger processing, QC, normalization, integration, clustering, annotation, visualization, differential expression, and reproducibility." />
 
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e9eefc;
+      --muted:#aab6e8;
+      --accent:#7aa2ff;
+      --accent2:#70ffd1;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.20), transparent 60%),
+                  radial-gradient(900px 500px at 90% 10%, rgba(112,255,209,.12), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{padding:28px 18px 18px; max-width:1280px; margin:0 auto;}
+    .hero{
+      background: linear-gradient(135deg, rgba(122,162,255,.18), rgba(17,26,51,.0));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px 18px;
+    }
+    h1{margin:0 0 8px; font-size: clamp(22px, 4vw, 36px); letter-spacing:.2px;}
+    .subtitle{margin:0 0 12px; color:var(--muted); line-height:1.6; font-size:15px; max-width:1100px;}
+    .kicker{
+      color:var(--accent2);
+      font-weight:900;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      font-size:12px;
+      margin-top:12px;
+    }
+    .top-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .search-wrap{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex:1;
+      min-width:260px;
+    }
+    input[type="search"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+    }
+    input[type="search"]::placeholder{color:rgba(233,238,252,.55)}
+    .btn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.10)}
+    main{
+      max-width:1280px;
+      margin:0 auto;
+      padding: 0 18px 48px;
+      display:grid;
+      grid-template-columns: 340px 1fr;
+      gap:14px;
+    }
+    nav{
+      position:sticky;
+      top:14px;
+      align-self:start;
+      height: calc(100vh - 28px);
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.55);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      padding:12px;
+    }
+    nav h2{
+      font-size:13px;
+      margin:6px 8px 10px;
+      color:var(--muted);
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+    .toc a{
+      display:block;
+      padding:8px 10px;
+      border-radius:12px;
+      color:var(--text);
+      border:1px solid transparent;
+      font-size: 14px;
+      line-height:1.35;
+    }
+    .toc a:hover{
+      background: rgba(255,255,255,.06);
+      border-color: var(--border);
+      text-decoration:none;
+    }
+    .content{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .card{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.45);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-header{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: rgba(15,23,48,.55);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .card-title{margin:0; font-size:16px; line-height:1.35}
+    .tag{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      padding:4px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .card-body{
+      padding:14px 16px 16px;
+      color:var(--text);
+      line-height:1.65;
+      font-size:14.5px;
+    }
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .grid2{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+      margin-top:10px;
+    }
+    .box{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      background: rgba(0,0,0,.20);
+    }
+    .box h3{margin:0 0 6px; font-size:14px}
+    .box p{margin:0; color:var(--muted); font-size:13.5px; line-height:1.55}
+    details{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:10px 12px;
+      margin:12px 0 0;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:900;
+      color:var(--text);
+      list-style:none;
+      user-select:none;
+    }
+    summary::-webkit-details-marker{display:none}
+    summary:before{content:"▸"; margin-right:8px; color:var(--muted)}
+    details[open] summary:before{content:"▾"}
+
+    .codeblock pre{
+      margin:10px 0 0;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.32);
+      overflow:auto;
+      padding: 14px 12px 12px;
+      position: relative;
+    }
+    .codeblock code{
+      font-family: var(--mono);
+      font-size: 12.6px;
+      line-height: 1.55;
+      white-space: pre;
+      display:block;
+    }
+    .copy-btn{
+      position:absolute;
+      top:10px;
+      right:10px;
+      padding:6px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+      user-select:none;
+    }
+    .copy-btn:hover{background: rgba(255,255,255,.10)}
+
+    .pillrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      font-weight:900;
+      font-size:13px;
+    }
+    .pill:hover{background: rgba(255,255,255,.10); text-decoration:none}
+
+    .warn{
+      border-left: 4px solid rgba(255, 180, 90, .9);
+      padding: 10px 12px;
+      background: rgba(255, 180, 90, .08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    .ok{
+      border-left: 4px solid rgba(112,255,209,.9);
+      padding: 10px 12px;
+      background: rgba(112,255,209,.08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    ul{margin: 8px 0 0 18px}
+    li{margin: 4px 0}
+
+    .checklist label{
+      display:flex; gap:10px; align-items:flex-start; margin:8px 0; cursor:pointer;
+    }
+    .checklist input{margin-top:3px}
+
+    @media (max-width: 1060px){
+      main{grid-template-columns:1fr}
+      nav{position:relative; height:auto}
+      .grid2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="hero">
+    <h1>10x Single-Cell RNA-seq: End-to-End Analysis Pipeline</h1>
+    <p class="subtitle">
+      A practical, detailed “course + SOP” for analyzing <b>10x Genomics scRNA-seq</b> data:
+      <b>Cell Ranger → QC → normalization → batch correction → clustering → annotation → visualization → DE → reporting</b>.
+      Includes two analysis tracks: <b>Seurat (R)</b> and <b>Scanpy + scVI (Python)</b>.
+    </p>
+
+    <div class="kicker">What you’ll produce</div>
+    <p class="subtitle">
+      (1) Cell-level QC tables and plots, (2) filtered AnnData/Seurat objects, (3) UMAPs, marker tables,
+      (4) cell type labels, (5) differential expression (ideally pseudobulk), (6) reproducible report and exports.
+    </p>
+
+    <div class="top-actions">
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Filter sections (e.g., 'doublets', 'ambient RNA', 'SCTransform', 'scVI', 'pseudobulk')…" />
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+      <button class="btn" id="copyLink">Copy page link</button>
+    </div>
+
+    <div class="pillrow">
+      <a class="pill" href="#start">Start here</a>
+      <a class="pill" href="#cellranger">Cell Ranger</a>
+      <a class="pill" href="#qc">QC decisions</a>
+      <a class="pill" href="#seurat">Seurat pipeline</a>
+      <a class="pill" href="#scanpy">Scanpy + scVI pipeline</a>
+      <a class="pill" href="#viz">Visualization cookbook</a>
+      <a class="pill" href="#de">Differential expression</a>
+      <a class="pill" href="#repro">Reproducibility</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav>
+    <h2>Pipeline map</h2>
+    <div class="toc">
+      <a href="#start">0) Start here: strategy & pitfalls</a>
+      <a href="#inputs">1) Inputs: BCL/FASTQ/Cell Ranger outputs</a>
+      <a href="#structure">2) Project structure</a>
+      <a href="#cellranger">3) Cell Ranger processing</a>
+      <a href="#qc">4) QC: what to check & how to choose thresholds</a>
+      <a href="#ambient">5) Ambient RNA removal</a>
+      <a href="#doublets">6) Doublet detection</a>
+      <a href="#seurat">7) Track A: Seurat end-to-end (R)</a>
+      <a href="#scanpy">8) Track B: Scanpy + scVI end-to-end (Python)</a>
+      <a href="#integration">9) Integration & batch correction (when/why)</a>
+      <a href="#annotation">10) Cell type annotation (manual + reference)</a>
+      <a href="#viz">11) Visualization cookbook</a>
+      <a href="#de">12) Differential expression (single-cell vs pseudobulk)</a>
+      <a href="#advanced">13) Advanced modules (CITE-seq, velocity, trajectories)</a>
+      <a href="#repro">14) Reproducibility & reporting</a>
+      <a href="#trouble">15) Troubleshooting</a>
+      <a href="#refs">Tool links</a>
+    </div>
+
+    <h2 style="margin-top:16px;">Quick jump</h2>
+    <div class="toc">
+      <a href="#cellranger-count">cellranger count</a>
+      <a href="#seurat-script">Seurat script</a>
+      <a href="#scanpy-script">Scanpy/scVI script</a>
+      <a href="#pseudobulk">Pseudobulk DE</a>
+      <a href="#snakemake">Snakemake skeleton</a>
+    </div>
+  </nav>
+
+  <section class="content" id="content">
+
+    <!-- 0 -->
+    <article class="card topic" id="start" data-keywords="strategy pitfalls droplet 10x scRNA-seq best practices">
+      <div class="card-header">
+        <h2 class="card-title">0) Start here: strategy & common pitfalls</h2>
+        <span class="tag">Read first</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Golden rule</h3>
+            <p>
+              Most “bad results” come from: (i) poor QC decisions, (ii) unhandled batch effects,
+              (iii) doublets/ambient RNA, or (iv) invalid DE statistics. Fix these first.
+            </p>
+          </div>
+          <div class="box">
+            <h3>What “end-to-end” means here</h3>
+            <p>
+              Raw reads → Cell Ranger → gene×cell matrix → QC + filtering → normalization → integration → clustering →
+              markers → annotation → visualization → DE → exports + report.
+            </p>
+          </div>
+        </div>
+
+        <div class="warn">
+          <b>Don’t hard-code QC thresholds</b> like “nFeature &lt; 6000” blindly.
+          Thresholds should be guided by (a) tissue/cell type, (b) chemistry, (c) mitochondrial/ribosomal patterns,
+          and (d) expected doublet rate. Use robust summaries and inspect plots.
+        </div>
+
+        <details open>
+          <summary>Minimal checklist before you start</summary>
+          <div class="checklist">
+            <label><input type="checkbox" data-key="sc1"/> <span>You have sample metadata (condition, donor, batch, lane, chemistry, prep date).</span></label>
+            <label><input type="checkbox" data-key="sc2"/> <span>You know whether data are scRNA-seq only, or multiome/CITE-seq/VDJ.</span></label>
+            <label><input type="checkbox" data-key="sc3"/> <span>You have a consistent reference genome (GRCh38/mm10) and gene annotation version.</span></label>
+            <label><input type="checkbox" data-key="sc4"/> <span>You will check Cell Ranger web summary metrics for each sample.</span></label>
+            <label><input type="checkbox" data-key="sc5"/> <span>You have a plan for ambient RNA + doublets.</span></label>
+            <label><input type="checkbox" data-key="sc6"/> <span>You will do DE with pseudobulk for subject-level inference.</span></label>
+          </div>
+        </details>
+      </div>
+    </article>
+
+    <!-- 1 -->
+    <article class="card topic" id="inputs" data-keywords="inputs bcl fastq cellranger outputs filtered_feature_bc_matrix raw_feature_bc_matrix web_summary">
+      <div class="card-header">
+        <h2 class="card-title">1) Inputs: what 10x gives you (and what you should save)</h2>
+        <span class="tag">Data formats</span>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li><b>BCLs</b> (Illumina sequencer output) → converted to FASTQs via <code>cellranger mkfastq</code> (or Illumina bcl-convert).</li>
+          <li><b>FASTQs</b> → processed by <code>cellranger count</code> to produce alignments and matrices.</li>
+          <li><b>Cell Ranger outputs</b> (per sample):
+            <ul>
+              <li><code>outs/filtered_feature_bc_matrix/</code> (recommended for standard analysis)</li>
+              <li><code>outs/raw_feature_bc_matrix/</code> (useful for ambient RNA estimation)</li>
+              <li><code>outs/web_summary.html</code> (QC metrics snapshot)</li>
+              <li><code>outs/metrics_summary.csv</code> (machine-readable metrics)</li>
+              <li><code>outs/possorted_genome_bam.bam</code> (needed for velocyto / deeper QC)</li>
+            </ul>
+          </li>
+        </ul>
+        <div class="ok">
+          <b>Best practice:</b> archive <code>web_summary.html</code>, <code>metrics_summary.csv</code>, and the exact reference used.
+        </div>
+      </div>
+    </article>
+
+    <!-- 2 -->
+    <article class="card topic" id="structure" data-keywords="project structure folders reproducible pipeline">
+      <div class="card-header">
+        <h2 class="card-title">2) Project structure (recommended)</h2>
+        <span class="tag">Reproducible layout</span>
+      </div>
+      <div class="card-body">
+        <div class="codeblock" data-src="code-structure" data-lang="bash"></div>
+      </div>
+    </article>
+
+    <!-- 3 -->
+    <article class="card topic" id="cellranger" data-keywords="cellranger mkfastq count aggr multi reference transcriptome chemistry">
+      <div class="card-header">
+        <h2 class="card-title">3) Cell Ranger processing (mkfastq → count → aggr/multi)</h2>
+        <span class="tag">10x upstream</span>
+      </div>
+      <div class="card-body">
+        <div class="warn">
+          <b>Keep references consistent:</b> never mix different gene annotations across samples in one analysis.
+          If you re-run, re-run all samples with the same reference build.
+        </div>
+
+        <details open>
+          <summary>Install / environment notes</summary>
+          <ul>
+            <li>Cell Ranger is typically installed as a self-contained tarball. Put it on your PATH.</li>
+            <li>Match Cell Ranger major version to your assay chemistry and 10x guidance.</li>
+            <li>Record: <code>cellranger --version</code>, reference version, and command lines in <code>logs/</code>.</li>
+          </ul>
+        </details>
+
+        <details id="cellranger-count" open>
+          <summary>Case A: You already have FASTQs (run cellranger count)</summary>
+          <div class="codeblock" data-src="code-cellranger-count" data-lang="bash"></div>
+          <div class="codeblock" data-src="code-samples-csv" data-lang="text"></div>
+          <p class="muted small">
+            Use <code>--chemistry</code> only if needed; otherwise let Cell Ranger auto-detect.
+            For multi-lane FASTQs, set <code>--fastqs</code> to the directory and use <code>--sample</code>.
+          </p>
+        </details>
+
+        <details>
+          <summary>Case B: You have BCLs (run cellranger mkfastq)</summary>
+          <div class="codeblock" data-src="code-cellranger-mkfastq" data-lang="bash"></div>
+        </details>
+
+        <details>
+          <summary>Multiple libraries / multiplexed: cellranger multi (GEX + CITE-seq/HTO)</summary>
+          <div class="codeblock" data-src="code-cellranger-multi" data-lang="bash"></div>
+          <div class="codeblock" data-src="code-multi-config" data-lang="text"></div>
+        </details>
+
+        <details>
+          <summary>Combine samples for comparable depth: cellranger aggr</summary>
+          <div class="codeblock" data-src="code-cellranger-aggr" data-lang="bash"></div>
+          <div class="codeblock" data-src="code-aggr-csv" data-lang="text"></div>
+          <div class="warn">
+            <b>aggr normalizes library depth</b>. If your biological signal correlates with depth, think carefully:
+            sometimes you want to integrate downstream instead of depth-normalizing upstream.
+          </div>
+        </details>
+      </div>
+    </article>
+
+    <!-- 4 -->
+    <article class="card topic" id="qc" data-keywords="qc thresholds mitochondrial ribosomal nCount nFeature knee plot droplets empty droplets">
+      <div class="card-header">
+        <h2 class="card-title">4) QC: what to check and how to choose thresholds</h2>
+        <span class="tag">Critical</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Cell-level QC metrics</h3>
+            <p>
+              <b>nCount</b> (UMIs), <b>nFeature</b> (genes), <b>% mito</b> (MT- genes),
+              optional <b>% ribo</b> (RPL/RPS), and <b>complexity</b> (genes per UMI).
+            </p>
+          </div>
+          <div class="box">
+            <h3>Sample-level QC (Cell Ranger)</h3>
+            <p>
+              Fraction reads in cells, sequencing saturation, median genes/UMIs per cell,
+              estimated number of cells, and mapping rates.
+            </p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>Choosing thresholds: robust, tissue-aware approach</summary>
+          <ul>
+            <li><b>Start</b> with permissive filtering (remove extreme outliers only), then refine after clustering.</li>
+            <li><b>Use distributions</b> per sample/donor; don’t pool before inspecting.</li>
+            <li><b>High % mito</b> often indicates stress/dying cells, but some cell types naturally have higher mitochondria.</li>
+            <li><b>Very high nCount/nFeature</b> often indicates doublets/multiplets.</li>
+            <li><b>Low nFeature</b> indicates empty droplets / ambient RNA / poor capture.</li>
+          </ul>
+          <div class="ok">
+            Rule of thumb: define sample-specific cutoffs using quantiles (e.g., 1st–99th) or MAD-based outlier rules.
+            Then sanity-check with marker expression after clustering.
+          </div>
+        </details>
+
+        <details>
+          <summary>QC plots you should always generate</summary>
+          <ul>
+            <li>Violin plots: nCount, nFeature, % mito (per sample/batch)</li>
+            <li>Scatter: nCount vs nFeature; nCount vs % mito</li>
+            <li>UMAP colored by QC metrics (spot bad clusters)</li>
+            <li>Cell cycle scores (optional) and regression decisions</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- 5 -->
+    <article class="card topic" id="ambient" data-keywords="ambient RNA soupx cellbender empty droplets contamination">
+      <div class="card-header">
+        <h2 class="card-title">5) Ambient RNA removal (optional but often worth it)</h2>
+        <span class="tag">Cleanup</span>
+      </div>
+      <div class="card-body">
+        <div class="warn">
+          Ambient RNA is common in droplet scRNA-seq (e.g., lysed cells). If you see broad low-level expression of
+          marker genes everywhere (e.g., hemoglobin in non-RBCs), consider ambient correction.
+        </div>
+
+        <details open>
+          <summary>Approach options</summary>
+          <ul>
+            <li><b>SoupX (R)</b>: uses raw/filtered matrices to estimate contamination and adjust counts (popular for 10x).</li>
+            <li><b>CellBender (Python)</b>: deep learning approach; stronger assumptions + GPU often helpful.</li>
+            <li><b>EmptyDrops</b>: identify empty droplets; not a full correction but helps filtering.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>SoupX example (R) (high-level template)</summary>
+          <div class="codeblock" data-src="code-soupx" data-lang="r"></div>
+          <div class="muted small">
+            Tip: apply SoupX before heavy downstream steps (integration/clustering), and re-run variable features/PCA.
+          </div>
+        </details>
+      </div>
+    </article>
+
+    <!-- 6 -->
+    <article class="card topic" id="doublets" data-keywords="doublets multiplets doubletfinder scrublet expected doublet rate 10x">
+      <div class="card-header">
+        <h2 class="card-title">6) Doublet detection (strongly recommended)</h2>
+        <span class="tag">Quality</span>
+      </div>
+      <div class="card-body">
+        <div class="ok">
+          Doublets are more frequent at higher cell loading. Use a method (DoubletFinder/Scrublet) and validate:
+          doublets often sit between clusters and show mixed markers.
+        </div>
+        <details open>
+          <summary>Recommended workflow</summary>
+          <ul>
+            <li>Run an initial clustering (light QC) → identify major populations.</li>
+            <li>Run doublet detection per sample (or per batch) using expected doublet rate guidance.</li>
+            <li>Remove predicted doublets → re-run normalization/integration/clustering.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>DoubletFinder (Seurat) template</summary>
+          <div class="codeblock" data-src="code-doubletfinder" data-lang="r"></div>
+        </details>
+
+        <details>
+          <summary>Scrublet (Scanpy) template</summary>
+          <div class="codeblock" data-src="code-scrublet" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- 7 -->
+    <article class="card topic" id="seurat" data-keywords="seurat sctransform integration harmony markers findallmarkers umap clustering">
+      <div class="card-header">
+        <h2 class="card-title">7) Track A: Seurat end-to-end pipeline (R)</h2>
+        <span class="tag">Recommended R track</span>
+      </div>
+      <div class="card-body">
+        <div class="kicker">Summary steps</div>
+        <ul>
+          <li>Load 10x matrices → add metadata → QC metrics → filter</li>
+          <li>Normalize (SCTransform recommended) → PCA → neighbors → clustering → UMAP</li>
+          <li>Markers → annotation (manual + reference)</li>
+          <li>Integration/batch correction if needed</li>
+          <li>Pseudobulk differential expression (recommended for inference)</li>
+        </ul>
+
+        <details open id="seurat-script">
+          <summary>Complete Seurat script (multi-sample, QC, SCTransform, integration, clustering, markers, plots)</summary>
+          <div class="codeblock" data-src="code-seurat-full" data-lang="r"></div>
+        </details>
+
+        <details>
+          <summary>Seurat plotting cookbook (QC, UMAP, dotplot, heatmap)</summary>
+          <div class="codeblock" data-src="code-seurat-viz" data-lang="r"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- 8 -->
+    <article class="card topic" id="scanpy" data-keywords="scanpy anndata scvi scANVI neighbors leiden umap hvg scran">
+      <div class="card-header">
+        <h2 class="card-title">8) Track B: Scanpy + scVI end-to-end pipeline (Python)</h2>
+        <span class="tag">Recommended Python track</span>
+      </div>
+      <div class="card-body">
+        <div class="kicker">Summary steps</div>
+        <ul>
+          <li>Read 10x matrices into AnnData → QC metrics → filter</li>
+          <li>Normalization/log1p (or scVI for modeling) → HVGs → PCA → neighbors → Leiden → UMAP</li>
+          <li>Batch correction: Harmony / BBKNN / scVI</li>
+          <li>Markers + annotation (manual + reference / scANVI)</li>
+          <li>DE: prefer pseudobulk or model-based methods; document choices</li>
+        </ul>
+
+        <details open id="scanpy-script">
+          <summary>Complete Scanpy + scVI script (QC, HVG, scVI integration, clustering, markers, plots)</summary>
+          <div class="codeblock" data-src="code-scanpy-scvi-full" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>Scanpy plotting cookbook (QC, UMAP, dotplot, heatmap)</summary>
+          <div class="codeblock" data-src="code-scanpy-viz" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- 9 -->
+    <article class="card topic" id="integration" data-keywords="integration batch correction seurat anchors harmony scvi bbknn combat">
+      <div class="card-header">
+        <h2 class="card-title">9) Integration & batch correction: when/why/how</h2>
+        <span class="tag">Key decision</span>
+      </div>
+      <div class="card-body">
+        <div class="warn">
+          <b>Don’t integrate by default.</b> If batch correlates with biology (e.g., case/control split by run),
+          naive integration can erase signal. Always inspect pre-integration structure.
+        </div>
+        <details open>
+          <summary>When to integrate</summary>
+          <ul>
+            <li>Same biology measured across donors/batches and you want shared embedding/clusters.</li>
+            <li>Technical variation dominates and obscures known biology (e.g., same cell type splits by batch).</li>
+            <li>You need a joint atlas for annotation or label transfer.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>When NOT to integrate</summary>
+          <ul>
+            <li>Your main question is a condition effect that is confounded with batch.</li>
+            <li>You only need within-sample clustering or within-donor trajectories.</li>
+            <li>You plan to do inference with pseudobulk at donor level (often you can avoid strong integration).</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Common integration choices</summary>
+          <ul>
+            <li><b>Seurat anchors</b>: strong baseline for many datasets.</li>
+            <li><b>Harmony</b>: fast, effective, easy to apply after PCA.</li>
+            <li><b>scVI</b>: probabilistic model; great for large/batchy datasets; supports DE and label transfer.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- 10 -->
+    <article class="card topic" id="annotation" data-keywords="annotation cell types markers azimuth singler scANVI reference mapping">
+      <div class="card-header">
+        <h2 class="card-title">10) Cell type annotation: manual + reference</h2>
+        <span class="tag">Interpretation</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Best practice approach</summary>
+          <ul>
+            <li><b>Manual</b>: cluster markers + known marker panels + sanity checks (doublets, ambient RNA).</li>
+            <li><b>Reference mapping</b>: use a curated atlas (Azimuth/Seurat) or scANVI labels; treat as suggestions.</li>
+            <li><b>Validate</b>: check multiple markers, not single genes; ensure plausible proportions by tissue.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Annotation guardrails</summary>
+          <ul>
+            <li>If a “cell type” has high nCount and mixed markers → suspect doublets.</li>
+            <li>If a marker is low-level everywhere → suspect ambient RNA.</li>
+            <li>If clusters are driven by mitochondrial/ribosomal genes → QC/technical artifact.</li>
+            <li>Check known gene sets: cell cycle, interferon response, stress signatures.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- 11 -->
+    <article class="card topic" id="viz" data-keywords="visualization umap violin dotplot heatmap ridge composition volcano">
+      <div class="card-header">
+        <h2 class="card-title">11) Visualization cookbook (what you should always show)</h2>
+        <span class="tag">Figures</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>QC & sanity</h3>
+            <p>Violin QC metrics; scatter QC; UMAP colored by QC; sample/batch proportions; doublet scores.</p>
+          </div>
+          <div class="box">
+            <h3>Biology & results</h3>
+            <p>UMAP by cell type/condition; dotplot/heatmap for markers; composition barplots; DE volcano/forest; pathway scores.</p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>Seurat “must-have” plots</summary>
+          <ul>
+            <li>VlnPlot: nFeature_RNA, nCount_RNA, percent.mt</li>
+            <li>FeatureScatter: nCount vs nFeature; nCount vs percent.mt</li>
+            <li>DimPlot: UMAP by sample, batch, cell type</li>
+            <li>DotPlot / DoHeatmap: marker panels</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Scanpy “must-have” plots</summary>
+          <ul>
+            <li>sc.pl.violin: qc metrics</li>
+            <li>sc.pl.umap: by batch, cell type, marker genes</li>
+            <li>sc.pl.dotplot / sc.pl.rank_genes_groups_heatmap</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- 12 -->
+    <article class="card topic" id="de" data-keywords="differential expression pseudobulk edgeR deseq2 limma dream glmm">
+      <div class="card-header">
+        <h2 class="card-title">12) Differential expression: single-cell vs pseudobulk</h2>
+        <span class="tag">Inference</span>
+      </div>
+      <div class="card-body">
+        <div class="warn">
+          <b>Most publishable DE is pseudobulk</b> (aggregate counts per donor × cell type), then use bulk RNA-seq DE tools.
+          This respects the experimental unit (donor/replicate) and avoids inflated significance from treating cells as replicates.
+        </div>
+
+        <details open id="pseudobulk">
+          <summary>Pseudobulk DE template (R): aggregate by donor + cell type → edgeR/DESeq2</summary>
+          <div class="codeblock" data-src="code-pseudobulk" data-lang="r"></div>
+        </details>
+
+        <details>
+          <summary>When single-cell DE is acceptable</summary>
+          <ul>
+            <li>Exploratory marker discovery within a dataset (not strict inference).</li>
+            <li>You explicitly model donor as random effect / use methods designed for hierarchical data.</li>
+            <li>You validate findings with pseudobulk or external data.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- 13 -->
+    <article class="card topic" id="advanced" data-keywords="cite-seq wnn hto hashing velocity velocyto scvelo trajectories monocle slingshot">
+      <div class="card-header">
+        <h2 class="card-title">13) Advanced modules (optional)</h2>
+        <span class="tag">Extensions</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>CITE-seq / ADT / hashing (10x Feature Barcode)</summary>
+          <ul>
+            <li>Use <code>cellranger multi</code> to process GEX + ADT/HTO if configured.</li>
+            <li>In Seurat: normalize RNA and ADT separately, then WNN (weighted nearest neighbors).</li>
+            <li>Check for HTO cross-talk and doublets (hashed doublets).</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>RNA velocity (requires spliced/unspliced)</summary>
+          <ul>
+            <li>Keep BAM output from Cell Ranger.</li>
+            <li>Run velocyto (or STARsolo/alevin-fry workflows) → load into scVelo.</li>
+            <li>Velocity is sensitive to preprocessing; treat results as directional hypotheses.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Trajectories</summary>
+          <ul>
+            <li>Use Monocle3/Slingshot (R) or scanpy+PAGA (Python) after careful selection of lineage subsets.</li>
+            <li>Recompute neighbors/UMAP on selected lineage to avoid mixing unrelated populations.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- 14 -->
+    <article class="card topic" id="repro" data-keywords="reproducibility versions logs conda renv docker snakemake nextflow">
+      <div class="card-header">
+        <h2 class="card-title">14) Reproducibility & reporting</h2>
+        <span class="tag">Ship it</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Record everything</summary>
+          <ul>
+            <li>Cell Ranger version + reference bundle ID</li>
+            <li>R sessionInfo() / Python package versions</li>
+            <li>All parameters: QC thresholds, normalization method, integration method, clustering resolution</li>
+            <li>Random seeds and any downsampling</li>
+          </ul>
+        </details>
+
+        <details id="snakemake">
+          <summary>Snakemake skeleton (starter) for reproducible runs</summary>
+          <div class="codeblock" data-src="code-snakemake" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>Minimal “results bundle” export</summary>
+          <div class="codeblock" data-src="code-export-bundle" data-lang="bash"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- 15 -->
+    <article class="card topic" id="trouble" data-keywords="troubleshooting merge split clusters batch effect doublets ambient mito ribo">
+      <div class="card-header">
+        <h2 class="card-title">15) Troubleshooting (fast diagnoses)</h2>
+        <span class="tag">Fix fast</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Clusters split by sample/batch, not biology</summary>
+          <ul>
+            <li>Check: are gene counts and mito% different across batches?</li>
+            <li>Try: SCTransform per sample + integration or Harmony/scVI.</li>
+            <li>But: if batch is confounded with condition, you need better design or donor-level modeling.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Markers look “smeared” everywhere (e.g., ALB in all cells)</summary>
+          <ul>
+            <li>Suspect ambient RNA; try SoupX/CellBender and re-run HVGs/PCA.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>High mitochondria cluster dominates</summary>
+          <ul>
+            <li>Often dying/stressed cells; remove if clearly low complexity and high mito.</li>
+            <li>But: some real cell types may have higher mito—confirm with markers.</li>
+          </ul>
+        </details>
+        <details>
+          <summary>Doublet detection flags too many cells</summary>
+          <ul>
+            <li>Ensure you’re running per sample and using correct expected doublet rate.</li>
+            <li>Validate by mixed markers and intermediate embedding positions.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Links -->
+    <article class="card topic" id="refs" data-keywords="links cell ranger seurat scanpy scvi-tools soupx doubletfinder scrublet">
+      <div class="card-header">
+        <h2 class="card-title">Tool links (official / common)</h2>
+        <span class="tag">Docs</span>
+      </div>
+      <div class="card-body">
+        <div class="pillrow">
+          <a class="pill" href="https://www.10xgenomics.com/support/software/cell-ranger/downloads" target="_blank" rel="noopener">Cell Ranger downloads</a>
+          <a class="pill" href="https://www.10xgenomics.com/support/software/cell-ranger/latest/release-notes/cr-release-notes" target="_blank" rel="noopener">Cell Ranger release notes</a>
+          <a class="pill" href="https://satijalab.org/seurat/" target="_blank" rel="noopener">Seurat</a>
+          <a class="pill" href="https://scanpy.readthedocs.io/" target="_blank" rel="noopener">Scanpy</a>
+          <a class="pill" href="https://scvi-tools.org/" target="_blank" rel="noopener">scvi-tools</a>
+          <a class="pill" href="https://github.com/constantAmateur/SoupX" target="_blank" rel="noopener">SoupX</a>
+          <a class="pill" href="https://github.com/chris-mcginnis-ucsf/DoubletFinder" target="_blank" rel="noopener">DoubletFinder</a>
+          <a class="pill" href="https://github.com/swolock/scrublet" target="_blank" rel="noopener">Scrublet</a>
+        </div>
+        <p class="muted small" style="margin-top:12px;">
+          If your data are <b>multiome (RNA+ATAC)</b> or <b>CITE-seq</b>, tell me and I’ll generate a specialized pipeline page
+          (Cell Ranger ARC + Signac / muon / totalVI + WNN).
+        </p>
+      </div>
+    </article>
+
+  </section>
+</main>
+
+<!-- =========================
+     CODE SNIPPETS (RAW TEXT)
+========================= -->
+
+<script type="text/plain" id="code-structure">
+mkdir -p project/{
+  raw/{bcl,fastq},
+  refs,
+  metadata,
+  cellranger_out,
+  analysis/{seurat,scanpy},
+  results/{qc,viz,markers,annotation,de,exports},
+  logs,
+  scripts
+}
+</script>
+
+<script type="text/plain" id="code-cellranger-count">
+# Example: run per sample (FASTQs already available)
+# Assumes:
+#   - FASTQs in raw/fastq/<SAMPLE_NAME>/
+#   - 10x reference in refs/refdata-gex-<species>-<version>/
+# Outputs go to cellranger_out/<SAMPLE_NAME>/
+
+export PATH="/path/to/cellranger-10.0.0:$PATH"   # adjust to your install
+cellranger --version
+
+REF="refs/refdata-gex-GRCh38-2024-A"             # example reference name; use your installed reference
+FASTQ_DIR="raw/fastq"
+SAMPLE="SAMPLE_001"
+
+mkdir -p logs cellranger_out
+
+# The key outputs used downstream:
+# cellranger_out/SAMPLE_001/outs/filtered_feature_bc_matrix
+# cellranger_out/SAMPLE_001/outs/raw_feature_bc_matrix
+# cellranger_out/SAMPLE_001/outs/web_summary.html
+# cellranger_out/SAMPLE_001/outs/metrics_summary.csv
+# cellranger_out/SAMPLE_001/outs/possorted_genome_bam.bam
+
+cellranger count \
+  --id "${SAMPLE}" \
+  --transcriptome "${REF}" \
+  --fastqs "${FASTQ_DIR}" \
+  --sample "${SAMPLE}" \
+  --localcores 16 \
+  --localmem 64 \
+  2>&1 | tee "logs/cellranger_count_${SAMPLE}.log"
+
+# Move output to a standard location
+mv "${SAMPLE}" "cellranger_out/${SAMPLE}"
+</script>
+
+<script type="text/plain" id="code-samples-csv">
+# Optional: sample sheet (your own convention) to keep metadata in one place
+# metadata/samples.csv
+sample_id,donor,condition,batch,cellranger_out
+SAMPLE_001,D01,case,run1,cellranger_out/SAMPLE_001/outs/filtered_feature_bc_matrix
+SAMPLE_002,D02,control,run1,cellranger_out/SAMPLE_002/outs/filtered_feature_bc_matrix
+</script>
+
+<script type="text/plain" id="code-cellranger-mkfastq">
+# Example: generate FASTQs from BCLs (if you have BCL output)
+# Requires a compatible Illumina run folder and a sample sheet.
+# Adjust to your run folder and sample sheet path.
+
+export PATH="/path/to/cellranger-10.0.0:$PATH"
+
+RUNFOLDER="raw/bcl/RUN_001"
+SAMPLESHEET="metadata/SampleSheet.csv"
+OUT="raw/fastq"
+
+mkdir -p "${OUT}" logs
+cellranger mkfastq \
+  --run="${RUNFOLDER}" \
+  --csv="${SAMPLESHEET}" \
+  --output-dir="${OUT}" \
+  2>&1 | tee "logs/cellranger_mkfastq_RUN_001.log"
+</script>
+
+<script type="text/plain" id="code-cellranger-multi">
+# Example: cellranger multi (GEX + Feature Barcode like ADT/HTO)
+export PATH="/path/to/cellranger-10.0.0:$PATH"
+
+CONFIG="metadata/multi_config.csv"
+mkdir -p logs
+cellranger multi \
+  --id multi_run_001 \
+  --csv "${CONFIG}" \
+  --localcores 16 \
+  --localmem 64 \
+  2>&1 | tee "logs/cellranger_multi_run_001.log"
+
+mv multi_run_001 cellranger_out/multi_run_001
+</script>
+
+<script type="text/plain" id="code-multi-config">
+# metadata/multi_config.csv (TEMPLATE - adjust to your assay)
+# See 10x docs for exact schema.
+# This is intentionally minimal/high-level.
+
+[gene-expression]
+reference,refs/refdata-gex-GRCh38-2024-A
+
+[libraries]
+fastq_id,fastqs,feature_types
+SAMPLE_001,raw/fastq,Sanger
+SAMPLE_001,raw/fastq,Antibody Capture
+
+[samples]
+sample_id,cmo_ids
+SAMPLE_001,CMO301
+</script>
+
+<script type="text/plain" id="code-cellranger-aggr">
+# Combine multiple Cell Ranger outputs into an aggregated matrix
+export PATH="/path/to/cellranger-10.0.0:$PATH"
+
+AGGR_CSV="metadata/aggr.csv"
+mkdir -p logs
+
+cellranger aggr \
+  --id aggr_run_001 \
+  --csv "${AGGR_CSV}" \
+  --normalize=mapped \
+  --localcores 16 \
+  --localmem 64 \
+  2>&1 | tee "logs/cellranger_aggr_run_001.log"
+
+mv aggr_run_001 cellranger_out/aggr_run_001
+</script>
+
+<script type="text/plain" id="code-aggr-csv">
+# metadata/aggr.csv
+sample_id,molecule_h5
+SAMPLE_001,cellranger_out/SAMPLE_001/outs/molecule_info.h5
+SAMPLE_002,cellranger_out/SAMPLE_002/outs/molecule_info.h5
+</script>
+
+<script type="text/plain" id="code-soupx">
+# SoupX template (R) - requires raw and filtered matrices
+# This is a high-level template; tune based on your dataset and SoupX docs.
+
+library(SoupX)
+library(Seurat)
+
+# Paths to Cell Ranger outputs:
+raw_dir  <- "cellranger_out/SAMPLE_001/outs/raw_feature_bc_matrix"
+filt_dir <- "cellranger_out/SAMPLE_001/outs/filtered_feature_bc_matrix"
+
+sc <- load10X(rawDir = raw_dir, filtDir = filt_dir)
+# Optionally estimate contamination using clusters from a preliminary Seurat run.
+# Example:
+# sc <- setClusters(sc, preliminary_clusters)
+# sc <- autoEstCont(sc)
+
+# Adjust counts
+out <- adjustCounts(sc)
+
+# Build Seurat object from adjusted counts
+so <- CreateSeuratObject(counts = out)
+</script>
+
+<script type="text/plain" id="code-doubletfinder">
+# DoubletFinder template (Seurat)
+# Run after an initial clustering on a per-sample object.
+
+# install.packages("remotes"); remotes::install_github("chris-mcginnis-ucsf/DoubletFinder")
+library(Seurat)
+library(DoubletFinder)
+
+# so: Seurat object that has PCA/Neighbors/Clusters already
+# Adjust pN/pK; pK often tuned via param sweep
+sweep.res <- paramSweep_v3(so, PCs = 1:30, sct = TRUE)
+sweep.stats <- summarizeSweep(sweep.res, GT = FALSE)
+bcmvn <- find.pK(sweep.stats)
+best.pK <- as.numeric(as.character(bcmvn$pK[which.max(bcmvn$BCmetric)]))
+
+# Expected doublet rate depends on loaded cells; set nExp accordingly
+nExp <- round(0.06 * ncol(so))  # example 6%; replace with appropriate rate
+so <- doubletFinder_v3(so, PCs = 1:30, pN = 0.25, pK = best.pK, nExp = nExp, reuse.pANN = FALSE, sct = TRUE)
+
+# The classification column name varies; inspect colnames(so@meta.data)
+</script>
+
+<script type="text/plain" id="code-scrublet">
+# Scrublet template (Scanpy)
+import scrublet as scr
+import scipy.sparse as sp
+
+counts = adata.X
+if not sp.issparse(counts):
+    counts = sp.csr_matrix(counts)
+
+scrub = scr.Scrublet(counts, expected_doublet_rate=0.06)
+doublet_scores, predicted_doublets = scrub.scrub_doublets()
+
+adata.obs["doublet_score"] = doublet_scores
+adata.obs["predicted_doublet"] = predicted_doublets
+
+# You can filter later:
+# adata = adata[~adata.obs["predicted_doublet"]].copy()
+</script>
+
+<script type="text/plain" id="code-seurat-full">
+# ============================
+# Seurat end-to-end script
+# ============================
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(tidyverse)
+  library(patchwork)
+})
+
+# ---- Config ----
+samples_csv <- "metadata/samples.csv"
+out_rds <- "analysis/seurat/seurat_integrated.rds"
+dir.create("analysis/seurat", recursive=TRUE, showWarnings=FALSE)
+dir.create("results/qc", recursive=TRUE, showWarnings=FALSE)
+dir.create("results/viz", recursive=TRUE, showWarnings=FALSE)
+dir.create("results/markers", recursive=TRUE, showWarnings=FALSE)
+
+# QC heuristic defaults (tune per dataset)
+qc_defaults <- list(
+  min_genes = 200,
+  max_genes_quantile = 0.995,     # remove extreme high-feature outliers (often doublets)
+  max_mito = 20                   # percent.mt cutoff; adjust per tissue/cell type
+)
+
+# ---- Load sample sheet ----
+smeta <- read.csv(samples_csv, stringsAsFactors = FALSE)
+
+# Expect columns: sample_id, donor, condition, batch, cellranger_out
+stopifnot(all(c("sample_id","donor","condition","batch","cellranger_out") %in% colnames(smeta)))
+
+# ---- Read each sample ----
+objs <- list()
+
+for(i in seq_len(nrow(smeta))){
+  sid <- smeta$sample_id[i]
+  mat_dir <- smeta$cellranger_out[i]
+
+  message("Reading: ", sid, " from ", mat_dir)
+  counts <- Read10X(data.dir = mat_dir)
+  so <- CreateSeuratObject(counts = counts, project = sid, min.cells = 3, min.features = 0)
+
+  so$sample_id <- sid
+  so$donor <- smeta$donor[i]
+  so$condition <- smeta$condition[i]
+  so$batch <- smeta$batch[i]
+
+  # QC metrics
+  so[["percent.mt"]] <- PercentageFeatureSet(so, pattern = "^MT-")
+  so[["percent.ribo"]] <- PercentageFeatureSet(so, pattern = "^RPL|^RPS")
+
+  # Light filtering: remove very low-gene cells now; refine later if needed
+  so <- subset(so, subset = nFeature_RNA >= qc_defaults$min_genes)
+
+  objs[[sid]] <- so
+}
+
+# ---- QC plots per sample ----
+pdf("results/qc/qc_violin_by_sample.pdf", width=12, height=7)
+for(sid in names(objs)){
+  so <- objs[[sid]]
+  p1 <- VlnPlot(so, features = c("nFeature_RNA","nCount_RNA","percent.mt","percent.ribo"), ncol=4, pt.size=0.1) +
+    plot_annotation(title = paste0("QC: ", sid))
+  print(p1)
+}
+dev.off()
+
+# ---- More robust outlier filtering per sample (optional) ----
+# Example: remove top quantile of nFeature_RNA (doublet-ish) and high mito
+for(sid in names(objs)){
+  so <- objs[[sid]]
+  q_hi <- quantile(so$nFeature_RNA, probs = qc_defaults$max_genes_quantile, na.rm = TRUE)
+  objs[[sid]] <- subset(so, subset = nFeature_RNA <= q_hi & percent.mt <= qc_defaults$max_mito)
+}
+
+# ---- Normalize & identify features ----
+# SCTransform is often a strong default for 10x data.
+objs <- lapply(objs, function(so){
+  so <- SCTransform(so, vars.to.regress = c("percent.mt"), verbose = FALSE)
+  so <- RunPCA(so, verbose = FALSE)
+  return(so)
+})
+
+# ---- Integration (optional but common) ----
+# If you only have 1 sample, you can skip integration and proceed directly.
+if(length(objs) > 1){
+  features <- SelectIntegrationFeatures(object.list = objs, nfeatures = 3000)
+  objs <- PrepSCTIntegration(object.list = objs, anchor.features = features)
+  anchors <- FindIntegrationAnchors(object.list = objs, normalization.method = "SCT", anchor.features = features)
+  integrated <- IntegrateData(anchorset = anchors, normalization.method = "SCT")
+} else {
+  integrated <- objs[[1]]
+}
+
+# ---- Dimensionality reduction, clustering, UMAP ----
+integrated <- RunPCA(integrated, verbose = FALSE)
+
+# Choose dims by ElbowPlot (export for review)
+pdf("results/viz/pca_elbow.pdf", width=6, height=4)
+print(ElbowPlot(integrated, ndims = 60))
+dev.off()
+
+dims_use <- 1:30  # tune based on elbow + dataset size/complexity
+integrated <- FindNeighbors(integrated, dims = dims_use)
+integrated <- FindClusters(integrated, resolution = 0.5)  # tune; higher -> more clusters
+integrated <- RunUMAP(integrated, dims = dims_use)
+
+# ---- Visualize embeddings ----
+pdf("results/viz/umap_by_metadata.pdf", width=14, height=6)
+pA <- DimPlot(integrated, group.by="sample_id", label=FALSE) + ggtitle("UMAP by sample")
+pB <- DimPlot(integrated, group.by="condition", label=FALSE) + ggtitle("UMAP by condition")
+pC <- DimPlot(integrated, group.by="batch", label=FALSE) + ggtitle("UMAP by batch")
+pD <- DimPlot(integrated, label=TRUE, repel=TRUE) + ggtitle("UMAP by cluster")
+print((pA + pB) / (pC + pD))
+dev.off()
+
+# QC overlays on UMAP
+pdf("results/viz/umap_qc_overlays.pdf", width=14, height=4)
+print(FeaturePlot(integrated, features=c("nCount_RNA","nFeature_RNA","percent.mt"), ncol=3))
+dev.off()
+
+# ---- Marker genes ----
+# For SCT data: use FindAllMarkers with assay="SCT"
+DefaultAssay(integrated) <- "SCT"
+markers <- FindAllMarkers(integrated, only.pos=TRUE, min.pct=0.25, logfc.threshold=0.25)
+write.csv(markers, "results/markers/markers_all_clusters.csv", row.names=FALSE)
+
+# Top markers per cluster
+top10 <- markers %>% group_by(cluster) %>% slice_max(order_by=avg_log2FC, n=10)
+write.csv(top10, "results/markers/markers_top10_per_cluster.csv", row.names=FALSE)
+
+# Heatmap of top markers
+pdf("results/viz/heatmap_top_markers.pdf", width=12, height=10)
+print(DoHeatmap(integrated, features=unique(top10$gene), size=3) + NoLegend())
+dev.off()
+
+# ---- Manual annotation placeholder ----
+# Create a vector mapping clusters to cell types after inspection
+# Example:
+# new_labels <- c("0"="T cells","1"="B cells","2"="Myeloid", ...)
+# integrated$celltype <- plyr::mapvalues(integrated$seurat_clusters, from=names(new_labels), to=unname(new_labels))
+
+# Save object
+saveRDS(integrated, out_rds)
+
+# Record versions
+sink("results/exports/sessionInfo_seurat.txt")
+print(sessionInfo())
+sink()
+</script>
+
+<script type="text/plain" id="code-seurat-viz">
+# Seurat visualization cookbook snippets
+
+# 1) QC violin plot by sample
+VlnPlot(integrated, features=c("nFeature_RNA","nCount_RNA","percent.mt"), group.by="sample_id", pt.size=0.1, ncol=3)
+
+# 2) Clustered dotplot for marker panels
+# markers_panel <- c("CD3D","CD3E","MS4A1","LYZ","NKG7","FCGR3A")
+# DotPlot(integrated, features=markers_panel) + RotatedAxis()
+
+# 3) Composition barplot: cell type proportions by condition (after annotation)
+# tab <- integrated@meta.data %>%
+#   count(condition, celltype) %>%
+#   group_by(condition) %>%
+#   mutate(frac = n/sum(n))
+# ggplot(tab, aes(x=condition, y=frac, fill=celltype)) + geom_col() + theme_minimal()
+
+# 4) FeaturePlot on split by condition (spot shifts)
+# FeaturePlot(integrated, features="IFITM3", split.by="condition", max.cutoff="q95")
+</script>
+
+<script type="text/plain" id="code-scanpy-scvi-full">
+# ============================
+# Scanpy + scVI end-to-end script
+# ============================
+import os
+import pandas as pd
+import numpy as np
+import scanpy as sc
+import scipy.sparse as sp
+
+# Optional: scvi-tools for integration & modeling
+import scvi
+
+sc.settings.verbosity = 3
+sc.set_figure_params(dpi=120, frameon=False)
+
+samples_csv = "metadata/samples.csv"
+out_h5ad = "analysis/scanpy/adata_scvi.h5ad"
+os.makedirs("analysis/scanpy", exist_ok=True)
+os.makedirs("results/qc", exist_ok=True)
+os.makedirs("results/viz", exist_ok=True)
+os.makedirs("results/markers", exist_ok=True)
+
+smeta = pd.read_csv(samples_csv)
+
+adatas = []
+for _, row in smeta.iterrows():
+    sid = row["sample_id"]
+    mat_dir = row["cellranger_out"]
+    print("Reading:", sid, mat_dir)
+
+    ad = sc.read_10x_mtx(mat_dir, var_names="gene_symbols", cache=True)
+    ad.var_names_make_unique()
+
+    ad.obs["sample_id"] = sid
+    ad.obs["donor"] = row["donor"]
+    ad.obs["condition"] = row["condition"]
+    ad.obs["batch"] = row["batch"]
+
+    # QC metrics
+    ad.var["mt"] = ad.var_names.str.startswith("MT-")
+    ad.var["ribo"] = ad.var_names.str.startswith("RPL") | ad.var_names.str.startswith("RPS")
+    sc.pp.calculate_qc_metrics(ad, qc_vars=["mt","ribo"], percent_top=None, log1p=False, inplace=True)
+
+    # Basic filtering (tune!)
+    ad = ad[ad.obs["n_genes_by_counts"] >= 200].copy()
+
+    adatas.append(ad)
+
+# Concatenate (keeps sample metadata)
+adata = adatas[0].concatenate(adatas[1:], batch_key="sample_id_concat", index_unique="-")
+
+# Filter extreme outliers (robust quantiles)
+hi = np.quantile(adata.obs["n_genes_by_counts"], 0.995)
+adata = adata[adata.obs["n_genes_by_counts"] <= hi].copy()
+adata = adata[adata.obs["pct_counts_mt"] <= 20].copy()
+
+# Normalize & log1p for QC plotting / baseline scanpy workflow
+sc.pp.normalize_total(adata, target_sum=1e4)
+sc.pp.log1p(adata)
+
+# HVGs per batch (helps with batch effects)
+sc.pp.highly_variable_genes(adata, n_top_genes=3000, flavor="seurat_v3", batch_key="batch")
+adata = adata[:, adata.var["highly_variable"]].copy()
+
+# Scale + PCA
+sc.pp.scale(adata, max_value=10)
+sc.tl.pca(adata, svd_solver="arpack")
+
+# Neighbors + UMAP + clustering (baseline)
+sc.pp.neighbors(adata, n_neighbors=15, n_pcs=30)
+sc.tl.umap(adata)
+sc.tl.leiden(adata, resolution=0.5)
+
+# Plot embeddings
+sc.pl.umap(adata, color=["leiden","sample_id","condition","batch"], wspace=0.4, save="_umap_meta.png")
+
+# Markers (quick exploratory)
+sc.tl.rank_genes_groups(adata, "leiden", method="wilcoxon")
+sc.pl.rank_genes_groups(adata, n_genes=20, sharey=False, save="_markers.png")
+df = sc.get.rank_genes_groups_df(adata, group=None)
+df.to_csv("results/markers/scanpy_markers_rank_genes_groups.csv", index=False)
+
+# ============================
+# scVI integration (recommended for batchy datasets)
+# ============================
+# Use raw counts for scVI (store counts before normalization if you want)
+# Here we reload raw counts by re-reading, or you can store adata.raw_counts earlier.
+# For simplicity, assume adata.X currently has log-normalized values; we re-create counts matrix approach:
+# Best practice: keep counts in adata.layers["counts"] from the start.
+
+# Minimal fix: store current X as log1p and create placeholder counts:
+# In a real pipeline, keep counts from read_10x_mtx in layers["counts"] BEFORE normalize/log1p.
+# We'll demonstrate the correct pattern below.
+
+# --- Correct pattern (recommended) ---
+# If you kept counts:
+# adata.layers["counts"] = adata.X.copy()   # before normalize/log1p
+# sc.pp.normalize_total(...); sc.pp.log1p(...)
+# Then scVI uses adata.layers["counts"].
+
+# For now, ensure counts exist:
+if "counts" not in adata.layers:
+    adata.layers["counts"] = adata.raw.X.copy() if adata.raw is not None else adata.X.copy()
+
+scvi.model.SCVI.setup_anndata(adata, layer="counts", batch_key="batch")
+
+model = scvi.model.SCVI(adata, n_latent=30)
+model.train(max_epochs=200, early_stopping=True)
+
+# Latent embedding
+adata.obsm["X_scVI"] = model.get_latent_representation()
+
+# Neighbors/UMAP on scVI latent
+sc.pp.neighbors(adata, use_rep="X_scVI", n_neighbors=15)
+sc.tl.umap(adata)
+sc.tl.leiden(adata, resolution=0.6, key_added="leiden_scvi")
+
+sc.pl.umap(adata, color=["leiden_scvi","sample_id","condition","batch"], wspace=0.4, save="_umap_scvi.png")
+
+# Markers on scVI clusters (still uses expression; ensure you interpret carefully)
+sc.tl.rank_genes_groups(adata, "leiden_scvi", method="wilcoxon")
+sc.pl.rank_genes_groups(adata, n_genes=20, sharey=False, save="_markers_scvi.png")
+
+# Save
+adata.write(out_h5ad)
+</script>
+
+<script type="text/plain" id="code-scanpy-viz">
+# Scanpy visualization cookbook snippets
+# 1) QC violins
+sc.pl.violin(adata, ["total_counts","n_genes_by_counts","pct_counts_mt"], groupby="sample_id", rotation=90)
+
+# 2) UMAP markers
+# sc.pl.umap(adata, color=["MS4A1","CD3D","NKG7","LYZ"], vmax="p99")
+
+# 3) Dotplot (cell type markers)
+# marker_dict = {"T":["CD3D","TRAC"],"B":["MS4A1","CD79A"],"Myeloid":["LYZ","S100A8"]}
+# sc.pl.dotplot(adata, marker_dict, groupby="leiden_scvi", standard_scale="var")
+
+# 4) Composition (after annotation)
+# tab = adata.obs.groupby(["condition","celltype"]).size().reset_index(name="n")
+# tab["frac"] = tab.groupby("condition")["n"].transform(lambda x: x/x.sum())
+</script>
+
+<script type="text/plain" id="code-pseudobulk">
+# Pseudobulk DE template (R) for donor-level inference
+# Requires: Seurat object with celltype labels and raw counts accessible.
+
+suppressPackageStartupMessages({
+  library(Seurat)
+  library(Matrix)
+  library(edgeR)
+  library(dplyr)
+})
+
+# integrated <- readRDS("analysis/seurat/seurat_integrated.rds")
+# Ensure you have:
+# integrated$donor, integrated$condition, integrated$celltype (or clusters if exploratory)
+
+# Choose grouping
+group_vars <- c("donor","condition","celltype")
+meta <- integrated@meta.data %>%
+  dplyr::select(all_of(group_vars)) %>%
+  mutate(cell_id = rownames(.))
+
+counts <- GetAssayData(integrated, slot="counts", assay="RNA")  # use RNA counts for DE
+
+# Aggregate counts per donor x celltype
+meta$key <- paste(meta$donor, meta$condition, meta$celltype, sep="|")
+keys <- unique(meta$key)
+
+pb <- sapply(keys, function(k){
+  cells <- meta$cell_id[meta$key == k]
+  Matrix::rowSums(counts[, cells, drop=FALSE])
+})
+
+pb <- Matrix(pb, sparse=TRUE)
+colnames(pb) <- keys
+
+# Build sample info for DE
+coldata <- data.frame(key=keys) %>%
+  tidyr::separate(key, into=c("donor","condition","celltype"), sep="\\|", remove=FALSE)
+
+# Example: DE within a specific cell type
+ct <- "T cells"  # adjust
+keep <- coldata$celltype == ct
+y <- DGEList(counts = pb[, keep, drop=FALSE])
+coldata_ct <- coldata[keep, , drop=FALSE]
+
+# Filter lowly expressed genes
+keep_genes <- filterByExpr(y, group=coldata_ct$condition)
+y <- y[keep_genes,, keep.lib.sizes=FALSE]
+
+y <- calcNormFactors(y)
+design <- model.matrix(~ condition, data=coldata_ct)
+y <- estimateDisp(y, design)
+fit <- glmQLFit(y, design)
+res <- glmQLFTest(fit, coef=2)
+
+out <- topTags(res, n=Inf)$table
+out$gene <- rownames(out)
+write.csv(out, file="results/de/pseudobulk_edgeR_Tcells_condition.csv", row.names=FALSE)
+
+# Repeat for other cell types or use interaction models if appropriate.
+</script>
+
+<script type="text/plain" id="code-snakemake">
+# Snakefile (starter) - minimal structure
+# This is a template; customize paths, resources, and rules.
+
+SAMPLES = [l.strip() for l in open("samples.txt") if l.strip()]
+
+rule all:
+    input:
+        "analysis/seurat/seurat_integrated.rds",
+        "analysis/scanpy/adata_scvi.h5ad"
+
+rule run_cellranger:
+    input:
+        # example: fastq dir and reference
+        fastq_dir="raw/fastq",
+        ref="refs/refdata-gex-GRCh38-2024-A"
+    output:
+        directory("cellranger_out/{sample}")
+    threads: 16
+    shell:
+        r"""
+        cellranger count \
+          --id {wildcards.sample} \
+          --transcriptome {input.ref} \
+          --fastqs {input.fastq_dir} \
+          --sample {wildcards.sample} \
+          --localcores {threads} \
+          --localmem 64
+        mv {wildcards.sample} {output}
+        """
+
+rule seurat:
+    input:
+        "metadata/samples.csv"
+    output:
+        "analysis/seurat/seurat_integrated.rds"
+    shell:
+        r"""
+        Rscript scripts/run_seurat.R
+        """
+
+rule scanpy:
+    input:
+        "metadata/samples.csv"
+    output:
+        "analysis/scanpy/adata_scvi.h5ad"
+    shell:
+        r"""
+        python scripts/run_scanpy_scvi.py
+        """
+</script>
+
+<script type="text/plain" id="code-export-bundle">
+# Bundle key outputs for sharing
+tar -czf scRNA_results_bundle.tgz \
+  results/ analysis/ metadata/ logs/ scripts/ 2>/dev/null || true
+</script>
+
+<script>
+  // Render codeblocks from <script type="text/plain"> sources
+  function renderCodeblocks(){
+    document.querySelectorAll(".codeblock").forEach(el => {
+      const src = el.getAttribute("data-src");
+      const node = document.getElementById(src);
+      if(!node) return;
+      const text = node.textContent.replace(/^\n+|\n+$/g, "");
+
+      const pre = document.createElement("pre");
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+
+      const code = document.createElement("code");
+      code.textContent = text;
+
+      btn.addEventListener("click", async () => {
+        try{
+          await navigator.clipboard.writeText(text);
+          const old = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(()=>btn.textContent=old, 900);
+        }catch(e){
+          btn.textContent = "Copy failed";
+          setTimeout(()=>btn.textContent="Copy", 900);
+        }
+      });
+
+      pre.appendChild(btn);
+      pre.appendChild(code);
+      el.appendChild(pre);
+    });
+  }
+
+  // Search filter across .topic cards
+  function setupSearch(){
+    const input = document.getElementById("search");
+    const topics = () => Array.from(document.querySelectorAll(".topic"));
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      topics().forEach(t => {
+        const kw = (t.getAttribute("data-keywords") || "").toLowerCase();
+        const text = t.innerText.toLowerCase();
+        const show = !q || kw.includes(q) || text.includes(q);
+        t.style.display = show ? "" : "none";
+      });
+    });
+  }
+
+  // Expand/collapse all details
+  function setupExpandCollapse(){
+    const allDetails = () => Array.from(document.querySelectorAll("details"));
+    document.getElementById("expandAll").addEventListener("click", () => allDetails().forEach(d => d.open = true));
+    document.getElementById("collapseAll").addEventListener("click", () => allDetails().forEach(d => d.open = false));
+  }
+
+  // Copy page link
+  function setupCopyLink(){
+    const btn = document.getElementById("copyLink");
+    btn.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(window.location.href);
+        const old = btn.textContent;
+        btn.textContent = "Link copied!";
+        setTimeout(()=>btn.textContent=old, 900);
+      }catch(e){
+        btn.textContent = "Copy failed";
+        setTimeout(()=>btn.textContent="Copy page link", 900);
+      }
+    });
+  }
+
+  // Persist checklist in localStorage
+  function setupChecklist(){
+    const boxes = Array.from(document.querySelectorAll('.checklist input[type="checkbox"][data-key]'));
+    boxes.forEach(cb => {
+      const key = "sc_course_" + cb.getAttribute("data-key");
+      const saved = localStorage.getItem(key);
+      if(saved === "1") cb.checked = true;
+      cb.addEventListener("change", () => localStorage.setItem(key, cb.checked ? "1" : "0"));
+    });
+  }
+
+  // Smooth scroll
+  function setupSmoothScroll(){
+    document.querySelectorAll(".toc a, .pillrow a").forEach(a => {
+      a.addEventListener("click", (e) => {
+        const href = a.getAttribute("href");
+        if(!href || !href.startsWith("#")) return;
+        const target = document.querySelector(href);
+        if(!target) return;
+        e.preventDefault();
+        target.scrollIntoView({behavior:"smooth", block:"start"});
+        history.pushState(null, "", href);
+      });
+    });
+  }
+
+  renderCodeblocks();
+  setupSearch();
+  setupExpandCollapse();
+  setupCopyLink();
+  setupChecklist();
+  setupSmoothScroll();
+</script>
+</body>
+</html>
