@@ -1,1 +1,1433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quantum Computing: Complete End-to-End Intro Course (Level 1 → Level 3)</title>
+  <meta name="description" content="A complete, end-to-end introductory course on quantum computing covering Level 1 concepts through Level 3 engineering: math prerequisites, qubits, gates, circuits, measurement, key algorithms, NISQ, variational methods, quantum ML, and implementation notes with code." />
 
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e9eefc;
+      --muted:#aab6e8;
+      --accent:#7aa2ff;
+      --accent2:#70ffd1;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.20), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(112,255,209,.12), transparent 55%),
+        var(--bg);
+      color:var(--text);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{padding:28px 18px 18px; max-width:1280px; margin:0 auto;}
+    .hero{
+      background: linear-gradient(135deg, rgba(122,162,255,.18), rgba(17,26,51,.0));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px 18px;
+    }
+    h1{margin:0 0 8px; font-size: clamp(22px, 4vw, 36px); letter-spacing:.2px;}
+    .subtitle{margin:0 0 12px; color:var(--muted); line-height:1.6; font-size:15px; max-width:1150px;}
+    .kicker{
+      color:var(--accent2);
+      font-weight:900;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      font-size:12px;
+      margin-top:12px;
+    }
+    .top-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .search-wrap{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex:1;
+      min-width:260px;
+    }
+    input[type="search"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+    }
+    input[type="search"]::placeholder{color:rgba(233,238,252,.55)}
+    .btn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.10)}
+    main{
+      max-width:1280px;
+      margin:0 auto;
+      padding: 0 18px 48px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:14px;
+    }
+    nav{
+      position:sticky;
+      top:14px;
+      align-self:start;
+      height: calc(100vh - 28px);
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.55);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      padding:12px;
+    }
+    nav h2{
+      font-size:13px;
+      margin:6px 8px 10px;
+      color:var(--muted);
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+    .toc a{
+      display:block;
+      padding:8px 10px;
+      border-radius:12px;
+      color:var(--text);
+      border:1px solid transparent;
+      font-size: 14px;
+      line-height:1.35;
+    }
+    .toc a:hover{
+      background: rgba(255,255,255,.06);
+      border-color: var(--border);
+      text-decoration:none;
+    }
+
+    .content{display:flex; flex-direction:column; gap:12px;}
+    .card{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.45);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-header{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: rgba(15,23,48,.55);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .card-title{margin:0; font-size:16px; line-height:1.35}
+    .tag{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      padding:4px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .card-body{
+      padding:14px 16px 16px;
+      color:var(--text);
+      line-height:1.65;
+      font-size:14.5px;
+    }
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .grid2{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+      margin-top:10px;
+    }
+    .box{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      background: rgba(0,0,0,.20);
+    }
+    .box h3{margin:0 0 6px; font-size:14px}
+    .box p{margin:0; color:var(--muted); font-size:13.5px; line-height:1.55}
+
+    details{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:10px 12px;
+      margin:12px 0 0;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:900;
+      color:var(--text);
+      list-style:none;
+      user-select:none;
+    }
+    summary::-webkit-details-marker{display:none}
+    summary:before{content:"▸"; margin-right:8px; color:var(--muted)}
+    details[open] summary:before{content:"▾"}
+
+    .codeblock pre{
+      margin:10px 0 0;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.32);
+      overflow:auto;
+      padding: 14px 12px 12px;
+      position: relative;
+    }
+    .codeblock code{
+      font-family: var(--mono);
+      font-size: 12.6px;
+      line-height: 1.55;
+      white-space: pre;
+      display:block;
+    }
+    .copy-btn{
+      position:absolute;
+      top:10px;
+      right:10px;
+      padding:6px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+      user-select:none;
+    }
+    .copy-btn:hover{background: rgba(255,255,255,.10)}
+
+    .pillrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      font-weight:900;
+      font-size:13px;
+    }
+    .pill:hover{background: rgba(255,255,255,.10); text-decoration:none}
+
+    .warn{
+      border-left: 4px solid rgba(255, 180, 90, .9);
+      padding: 10px 12px;
+      background: rgba(255, 180, 90, .08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    .ok{
+      border-left: 4px solid rgba(112,255,209,.9);
+      padding: 10px 12px;
+      background: rgba(112,255,209,.08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+      margin-top:10px;
+    }
+    th, td{
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+      font-size:13.5px;
+      line-height:1.45;
+    }
+    th{
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-weight:900;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    tr:last-child td{border-bottom:none}
+
+    ul{margin: 8px 0 0 18px}
+    li{margin: 4px 0}
+
+    @media (max-width: 1100px){
+      main{grid-template-columns:1fr}
+      nav{position:relative; height:auto}
+      .grid2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="hero">
+    <h1>Quantum Computing — Complete Intro Course (Level 1 → Level 3)</h1>
+    <p class="subtitle">
+      This is a self-contained course website you can publish on GitHub Pages. It starts from intuition (Level 1),
+      moves into applied algorithms and NISQ methods (Level 2), and ends with engineering-level topics (Level 3):
+      circuit design, noise, optimization, and building hybrid pipelines.
+    </p>
+
+    <div class="kicker">How to use this course</div>
+    <p class="subtitle">
+      Follow the left navigation in order. Expand sections for proofs, deeper math, and code.
+      Code examples include both “pure Python simulation” and practical “quantum SDK style” pseudocode.
+    </p>
+
+    <div class="top-actions">
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Filter content (e.g., 'Bloch', 'CNOT', 'Grover', 'QAOA', 'VQE', 'noise', 'kernel', 'amplitude encoding')…" />
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+      <button class="btn" id="copyLink">Copy page link</button>
+    </div>
+
+    <div class="pillrow">
+      <a class="pill" href="#roadmap">Roadmap</a>
+      <a class="pill" href="#prereqs">Prerequisites</a>
+      <a class="pill" href="#qubits">Qubits</a>
+      <a class="pill" href="#gates">Gates & Circuits</a>
+      <a class="pill" href="#measurement">Measurement</a>
+      <a class="pill" href="#algos">Algorithms</a>
+      <a class="pill" href="#nisq">NISQ & Variational</a>
+      <a class="pill" href="#qml">Quantum ML</a>
+      <a class="pill" href="#engineering">Engineering</a>
+      <a class="pill" href="#capstone">Capstone</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav>
+    <h2>Course map</h2>
+    <div class="toc">
+      <a href="#roadmap">0) Roadmap: Level 1 → 3</a>
+      <a href="#prereqs">1) Prerequisites checklist</a>
+      <a href="#coreidea">2) Core idea: state, amplitude, probability</a>
+      <a href="#qubits">3) Qubits, Bloch sphere, superposition</a>
+      <a href="#multiqubit">4) Multi-qubit systems & tensor products</a>
+      <a href="#measurement">5) Measurement and collapse</a>
+      <a href="#gates">6) Gates and circuits</a>
+      <a href="#entanglement">7) Entanglement & Bell states</a>
+      <a href="#teleportation">8) Teleportation (concept + circuit)</a>
+      <a href="#algos">9) Core algorithms: Grover, phase, QFT (overview)</a>
+      <a href="#grover">10) Grover deep dive (worked example)</a>
+      <a href="#qft">11) QFT deep dive (intuition + structure)</a>
+      <a href="#complexity">12) Complexity: speedup vs reality</a>
+      <a href="#nisq">13) NISQ era: noise, shots, transpilation</a>
+      <a href="#variational">14) Variational algorithms: VQE, QAOA</a>
+      <a href="#optimization">15) Optimization & gradients in hybrid QC</a>
+      <a href="#qml">16) Quantum ML: kernels, variational classifiers</a>
+      <a href="#dataencoding">17) Data encoding: basis/angle/amplitude</a>
+      <a href="#engineering">18) Engineering: hardware, noise mitigation, benchmarks</a>
+      <a href="#bioapps">19) Bioinformatics use-cases (mapping problems)</a>
+      <a href="#capstone">20) Capstone project templates</a>
+      <a href="#tools">21) Tools & learning resources</a>
+    </div>
+  </nav>
+
+  <section class="content">
+
+    <!-- Roadmap -->
+    <article class="card topic" id="roadmap" data-keywords="roadmap level 1 level 2 level 3 course outline">
+      <div class="card-header">
+        <h2 class="card-title">0) Roadmap: what you’ll be able to do at each level</h2>
+        <span class="tag">Big picture</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Level</th>
+              <th>Goal</th>
+              <th>You can explain</th>
+              <th>You can build</th>
+              <th>Common deliverables</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Level 1</b> (Concepts)</td>
+              <td>Understand the “quantum model of computation”</td>
+              <td>Qubits, superposition, entanglement, measurement, basic circuits</td>
+              <td>Small circuits in a simulator</td>
+              <td>Notebook demos, intuition, simple circuits</td>
+            </tr>
+            <tr>
+              <td><b>Level 2</b> (Applied)</td>
+              <td>Use key algorithms & NISQ methods</td>
+              <td>Grover, QFT intuition, variational circuits, QAOA/VQE</td>
+              <td>Hybrid workflows; small optimization tasks</td>
+              <td>Prototype for optimization/QML</td>
+            </tr>
+            <tr>
+              <td><b>Level 3</b> (Engineering)</td>
+              <td>Design + evaluate circuits under noise</td>
+              <td>Noise models, transpilation, mitigation, benchmarking</td>
+              <td>Robust pipelines: data encoding → circuit → training → eval</td>
+              <td>Reproducible repo + report + metrics</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="ok">
+          <b>Minimum practical endpoint:</b> be able to implement a small variational classifier or a QAOA optimization toy problem
+          and evaluate performance vs a classical baseline.
+        </div>
+      </div>
+    </article>
+
+    <!-- Prereqs -->
+    <article class="card topic" id="prereqs" data-keywords="prerequisites linear algebra complex numbers probability calculus python">
+      <div class="card-header">
+        <h2 class="card-title">1) Prerequisites checklist</h2>
+        <span class="tag">Before you start</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Must-have math</h3>
+            <p>
+              Vectors/matrices, dot products, eigenvalues, unitary matrices, complex numbers.
+              Tensor/Kronecker product is essential for multi-qubit systems.
+            </p>
+          </div>
+          <div class="box">
+            <h3>Must-have coding</h3>
+            <p>
+              Python + NumPy. Comfort reading/writing arrays, doing matrix multiplication, plotting probabilities.
+              Optional: autograd/torch for variational optimization.
+            </p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>Fast prerequisite “mini-syllabus” (recommended order)</summary>
+          <ol>
+            <li>Complex numbers: magnitude/phase, Euler’s formula <span class="muted">(you’ll see phases everywhere)</span></li>
+            <li>Linear algebra: basis, orthonormality, matrix multiplication, eigenvectors</li>
+            <li>Probability: expectation, variance, conditional probability</li>
+            <li>Optimization: gradient descent, loss landscapes (for variational circuits)</li>
+          </ol>
+        </details>
+
+        <details>
+          <summary>Quick mental model</summary>
+          <ul>
+            <li><b>Classical bit</b>: value is 0 or 1</li>
+            <li><b>Qubit</b>: state is a vector (complex amplitudes) whose squared magnitudes give probabilities</li>
+            <li><b>Gate</b>: unitary matrix that rotates the state vector</li>
+            <li><b>Measurement</b>: converts amplitudes into classical samples (shots)</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Core idea -->
+    <article class="card topic" id="coreidea" data-keywords="state vector amplitude probability born rule unitary">
+      <div class="card-header">
+        <h2 class="card-title">2) Core idea: amplitude → probability (Born rule)</h2>
+        <span class="tag">Foundation</span>
+      </div>
+      <div class="card-body">
+        <p>
+          A single qubit state is written:
+          <b>|ψ⟩ = α|0⟩ + β|1⟩</b>, where α and β are complex numbers.
+          The probabilities of measuring 0 or 1 are:
+          <b>P(0)=|α|²</b> and <b>P(1)=|β|²</b>, and they must sum to 1.
+        </p>
+
+        <details open>
+          <summary>Pure Python: simulate a qubit state and measure it</summary>
+          <div class="codeblock" data-src="code-qubit-sim" data-lang="python"></div>
+        </details>
+
+        <div class="warn">
+          <b>Important:</b> amplitudes can be negative or complex; probabilities cannot.
+          Quantum “weirdness” often comes from interference between amplitudes (signs/phases).
+        </div>
+      </div>
+    </article>
+
+    <!-- Qubits -->
+    <article class="card topic" id="qubits" data-keywords="qubit bloch sphere superposition phase global phase relative phase">
+      <div class="card-header">
+        <h2 class="card-title">3) Qubits, superposition, Bloch sphere</h2>
+        <span class="tag">Level 1</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Superposition</h3>
+            <p>
+              “In both states” is a shorthand. More precisely, a qubit has a vector state that can be decomposed into basis states.
+              Measurement samples one basis outcome.
+            </p>
+          </div>
+          <div class="box">
+            <h3>Phase</h3>
+            <p>
+              Relative phase affects interference. Global phase is unobservable. Relative phase changes outcomes after gates.
+            </p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>Bloch sphere parameterization</summary>
+          <p class="muted">
+            Any pure qubit can be written as:
+            |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ} sin(θ/2)|1⟩.
+            θ and φ correspond to a point on the Bloch sphere.
+          </p>
+        </details>
+
+        <details>
+          <summary>Pure Python: apply a Hadamard gate and observe 50/50 probabilities</summary>
+          <div class="codeblock" data-src="code-hadamard" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Multi qubit -->
+    <article class="card topic" id="multiqubit" data-keywords="tensor product kronecker multi qubit basis states computational basis">
+      <div class="card-header">
+        <h2 class="card-title">4) Multi-qubit systems & tensor products</h2>
+        <span class="tag">Level 1 → Level 2 bridge</span>
+      </div>
+      <div class="card-body">
+        <p>
+          Two qubits live in a 4D complex vector space with basis:
+          |00⟩, |01⟩, |10⟩, |11⟩.
+          If qubit A is |ψ⟩ and qubit B is |φ⟩, the joint state is |ψ⟩ ⊗ |φ⟩ (Kronecker product).
+        </p>
+
+        <details open>
+          <summary>Pure Python: build |00⟩ and apply a 2-qubit gate skeleton</summary>
+          <div class="codeblock" data-src="code-tensor" data-lang="python"></div>
+        </details>
+
+        <div class="warn">
+          <b>Scaling:</b> n qubits = 2^n amplitudes. Simulation becomes expensive quickly (why quantum is interesting, and why classical sim is hard).
+        </div>
+      </div>
+    </article>
+
+    <!-- Measurement -->
+    <article class="card topic" id="measurement" data-keywords="measurement collapse shots sampling born rule projective measurement">
+      <div class="card-header">
+        <h2 class="card-title">5) Measurement: collapse, shots, and why outputs are probabilistic</h2>
+        <span class="tag">Level 1</span>
+      </div>
+      <div class="card-body">
+        <p>
+          Real quantum devices output <b>samples</b> from a probability distribution, not the full distribution directly.
+          You run the circuit many times (shots) and count bitstrings.
+        </p>
+
+        <details open>
+          <summary>Pure Python: sample from a 2-qubit distribution</summary>
+          <div class="codeblock" data-src="code-shots" data-lang="python"></div>
+        </details>
+
+        <div class="ok">
+          <b>Rule of thumb:</b> doubling precision typically requires ~4× more shots (because sampling error ~ 1/√shots).
+        </div>
+      </div>
+    </article>
+
+    <!-- Gates -->
+    <article class="card topic" id="gates" data-keywords="gates hadamard pauli x y z s t rotation rx ry rz cnot circuit">
+      <div class="card-header">
+        <h2 class="card-title">6) Gates and circuits (unitary operations)</h2>
+        <span class="tag">Level 1</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Common 1-qubit gates (intuition)</summary>
+          <ul>
+            <li><b>X</b>: bit-flip (|0⟩ ↔ |1⟩)</li>
+            <li><b>Z</b>: phase-flip (changes sign of |1⟩ amplitude)</li>
+            <li><b>H</b>: creates/undoes equal superpositions</li>
+            <li><b>Rx/Ry/Rz</b>: rotations on Bloch sphere (parameterized)</li>
+            <li><b>S/T</b>: fixed phase rotations (useful for universality)</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Common 2-qubit gate</summary>
+          <ul>
+            <li><b>CNOT</b>: flips target qubit if control is 1; enables entanglement</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Pure Python: define X, Z, H matrices and apply them</summary>
+          <div class="codeblock" data-src="code-gates" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Entanglement -->
+    <article class="card topic" id="entanglement" data-keywords="entanglement bell state correlation non separable">
+      <div class="card-header">
+        <h2 class="card-title">7) Entanglement: Bell states and non-separability</h2>
+        <span class="tag">Level 1</span>
+      </div>
+      <div class="card-body">
+        <p>
+          An entangled state cannot be written as a tensor product of individual qubit states.
+          Example Bell state:
+          <b>|Φ⁺⟩ = (|00⟩ + |11⟩)/√2</b>.
+        </p>
+
+        <details open>
+          <summary>Pure Python: create |Φ⁺⟩ with H + CNOT and sample outcomes</summary>
+          <div class="codeblock" data-src="code-bell" data-lang="python"></div>
+        </details>
+
+        <div class="warn">
+          Entanglement creates correlations stronger than classical independent variables.
+          But it does not allow faster-than-light communication (measurement outcomes are random).
+        </div>
+      </div>
+    </article>
+
+    <!-- Teleportation -->
+    <article class="card topic" id="teleportation" data-keywords="teleportation protocol bell measurement classical bits correction">
+      <div class="card-header">
+        <h2 class="card-title">8) Quantum teleportation (concept + circuit structure)</h2>
+        <span class="tag">Level 1 milestone</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>What teleportation actually means</summary>
+          <ul>
+            <li>You transmit an unknown qubit state using: (1) pre-shared entanglement + (2) two classical bits.</li>
+            <li>No matter “moves” faster than light; classical bits are required for correction.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Circuit steps (high level)</summary>
+          <ol>
+            <li>Create entangled pair between Alice and Bob (Bell pair).</li>
+            <li>Alice performs Bell measurement on (state-to-send + her half of pair).</li>
+            <li>Alice sends 2 classical bits to Bob.</li>
+            <li>Bob applies correction gates (X/Z) based on received bits.</li>
+          </ol>
+        </details>
+
+        <details>
+          <summary>SDK-style pseudocode (conceptual)</summary>
+          <div class="codeblock" data-src="code-teleport-pseudo" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Algorithms overview -->
+    <article class="card topic" id="algos" data-keywords="algorithms grover shor qft phase estimation amplitude amplification">
+      <div class="card-header">
+        <h2 class="card-title">9) Core algorithms (overview)</h2>
+        <span class="tag">Level 2</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Grover’s algorithm</summary>
+          <ul>
+            <li>Speeds up unstructured search from O(N) to O(√N).</li>
+            <li>Uses amplitude amplification + oracle marking “good” states.</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Quantum Fourier Transform (QFT) and Phase Estimation</summary>
+          <ul>
+            <li>QFT is a structured transformation enabling period/phase extraction.</li>
+            <li>Phase estimation is core to many theoretical speedups (including Shor’s factoring).</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Why you should still learn these even if you won’t run Shor on real hardware today</summary>
+          <ul>
+            <li>They teach interference design (how to build circuits with constructive/destructive patterns).</li>
+            <li>They provide vocabulary for understanding modern research claims.</li>
+            <li>They explain what “quantum advantage” would actually look like.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Grover deep dive -->
+    <article class="card topic" id="grover" data-keywords="grover oracle diffusion amplitude amplification worked example">
+      <div class="card-header">
+        <h2 class="card-title">10) Grover deep dive (worked toy example)</h2>
+        <span class="tag">Level 2</span>
+      </div>
+      <div class="card-body">
+        <p>
+          For a 2-qubit system (N=4 states), if exactly one state is “marked”, Grover can find it with ~1 iteration.
+          The key components are:
+          <b>Oracle</b> (phase flip on the marked state) + <b>Diffuser</b> (inversion about the mean).
+        </p>
+
+        <details open>
+          <summary>Conceptual implementation: oracle + diffuser</summary>
+          <div class="codeblock" data-src="code-grover-toy" data-lang="python"></div>
+        </details>
+
+        <div class="ok">
+          <b>Practical tip:</b> Real “oracles” are problem-specific. Most engineering work is designing a good oracle or a good cost function.
+        </div>
+      </div>
+    </article>
+
+    <!-- QFT deep dive -->
+    <article class="card topic" id="qft" data-keywords="qft controlled phase hadamard bit reversal intuition">
+      <div class="card-header">
+        <h2 class="card-title">11) QFT deep dive (intuition + structure)</h2>
+        <span class="tag">Level 2</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Structure of QFT circuit</summary>
+          <ul>
+            <li>Sequence of Hadamards + controlled phase rotations.</li>
+            <li>Often ends with bit-reversal swaps.</li>
+            <li>Transforms computational basis into phase-encoded basis (like Fourier basis).</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Why QFT matters</summary>
+          <ul>
+            <li>Turns periodic/phase structure into measurable peaks.</li>
+            <li>Core primitive in phase estimation; helps you reason about “frequency domain” views of quantum states.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Complexity -->
+    <article class="card topic" id="complexity" data-keywords="complexity speedup big o oracle cost io bottleneck">
+      <div class="card-header">
+        <h2 class="card-title">12) Complexity: when speedups are real (and when they aren’t)</h2>
+        <span class="tag">Reality check</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Common hidden costs</summary>
+          <ul>
+            <li><b>Data loading/encoding</b> cost: mapping classical data to quantum states may dominate runtime.</li>
+            <li><b>Oracle cost</b>: Grover assumes a cheap oracle; in many problems the oracle is expensive.</li>
+            <li><b>Measurement/shots</b>: you need many runs to estimate expectations accurately.</li>
+            <li><b>Noise</b>: error rates can destroy advantages unless mitigated or corrected.</li>
+          </ul>
+        </details>
+
+        <div class="warn">
+          A “theoretical O(√N) speedup” can be irrelevant if the practical constants and overhead are huge.
+          Engineering-level evaluation always compares to strong classical baselines.
+        </div>
+      </div>
+    </article>
+
+    <!-- NISQ -->
+    <article class="card topic" id="nisq" data-keywords="nisq noise decoherence transpilation depth connectivity shots">
+      <div class="card-header">
+        <h2 class="card-title">13) NISQ era: noise, shots, transpilation, and what you can run today</h2>
+        <span class="tag">Level 2</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Key constraints</summary>
+          <ul>
+            <li><b>Decoherence</b>: qubits lose quantum information over time.</li>
+            <li><b>Gate errors</b>: each operation introduces noise.</li>
+            <li><b>Connectivity</b>: not all qubits can directly interact; extra SWAP gates increase depth.</li>
+            <li><b>Depth budget</b>: practical circuits must be shallow.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>What “shots” are, and why you care</summary>
+          <ul>
+            <li>Most hardware returns bitstrings from repeated runs.</li>
+            <li>Estimating an expectation value (cost function) needs enough samples to reduce noise.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Noise model intuition</summary>
+          <ul>
+            <li><b>Bit-flip</b> noise (X errors), <b>phase-flip</b> noise (Z errors)</li>
+            <li><b>Depolarizing</b> noise as a generic “randomization” model</li>
+            <li><b>Readout error</b>: measurement misclassification</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Variational -->
+    <article class="card topic" id="variational" data-keywords="variational vqe qaoa ansatz cost function expectation value">
+      <div class="card-header">
+        <h2 class="card-title">14) Variational algorithms: VQE and QAOA</h2>
+        <span class="tag">Level 2 core</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>VQE</h3>
+            <p>
+              Build an ansatz circuit with parameters θ. Measure expectation of a Hamiltonian H.
+              Use classical optimization to minimize ⟨H⟩.
+            </p>
+          </div>
+          <div class="box">
+            <h3>QAOA</h3>
+            <p>
+              Solve combinatorial optimization by alternating problem and mixer Hamiltonians,
+              tuning angles to maximize objective value.
+            </p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>Core loop (hybrid quantum-classical)</summary>
+          <ol>
+            <li>Choose ansatz + parameters θ</li>
+            <li>Run circuit; estimate cost J(θ) via measurements</li>
+            <li>Update θ using a classical optimizer (gradient-free or gradient-based)</li>
+            <li>Repeat until convergence</li>
+          </ol>
+        </details>
+
+        <details>
+          <summary>Ansatz design tips</summary>
+          <ul>
+            <li>Shallow but expressive; match hardware connectivity if possible.</li>
+            <li>Too deep → noise dominates. Too shallow → underfits.</li>
+            <li>Reuse patterns: “hardware-efficient ansatz” vs “problem-inspired ansatz”.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Optimization -->
+    <article class="card topic" id="optimization" data-keywords="optimization gradients parameter shift barren plateau learning rate">
+      <div class="card-header">
+        <h2 class="card-title">15) Optimization in hybrid QC: gradients, parameter-shift, and pitfalls</h2>
+        <span class="tag">Level 2 → Level 3</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Key optimization pitfalls</summary>
+          <ul>
+            <li><b>Barren plateaus</b>: gradients vanish as circuits get large/random.</li>
+            <li><b>Shot noise</b>: stochasticity makes gradients noisy.</li>
+            <li><b>Local minima / flat regions</b>: optimizer may stall.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Parameter-shift rule (intuition)</summary>
+          <p class="muted">
+            For many rotation gates, you can compute gradients by evaluating the circuit at shifted parameter values.
+            This avoids numerical finite differences and can be hardware-friendly.
+          </p>
+        </details>
+
+        <details>
+          <summary>Practical advice</summary>
+          <ul>
+            <li>Start with small qubit counts and shallow circuits; validate on a simulator first.</li>
+            <li>Compare to a strong classical baseline (logistic regression, SVM, small neural net).</li>
+            <li>Report: qubits, depth, number of shots, optimizer, iterations, noise model/hardware.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- QML -->
+    <article class="card topic" id="qml" data-keywords="quantum machine learning kernel method variational classifier qnn">
+      <div class="card-header">
+        <h2 class="card-title">16) Quantum ML: kernels and variational classifiers</h2>
+        <span class="tag">Level 2</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Two big families</summary>
+          <ul>
+            <li><b>Quantum kernels</b>: map data x into a quantum feature space via a circuit Φ(x), then measure similarity.</li>
+            <li><b>Variational quantum classifiers (VQC/QNN)</b>: learn parameters θ in a circuit to separate classes.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>When QML is most plausible</summary>
+          <ul>
+            <li>Small-to-medium feature dimension after preprocessing (e.g., 8–64 features).</li>
+            <li>Problems with complex decision boundaries where quantum feature maps might help.</li>
+            <li>Research prototypes (today). Production advantage is not guaranteed.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Minimal VQC skeleton (SDK-style pseudocode)</summary>
+          <div class="codeblock" data-src="code-vqc-pseudo" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Data encoding -->
+    <article class="card topic" id="dataencoding" data-keywords="data encoding angle encoding amplitude encoding basis encoding normalization">
+      <div class="card-header">
+        <h2 class="card-title">17) Data encoding: basis vs angle vs amplitude</h2>
+        <span class="tag">Level 2</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Encoding</th>
+              <th>Idea</th>
+              <th>Pros</th>
+              <th>Cons</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Basis</b></td>
+              <td>Represent data as a computational basis state</td>
+              <td>Simple conceptually</td>
+              <td>Not good for continuous features; needs many qubits for large spaces</td>
+            </tr>
+            <tr>
+              <td><b>Angle</b></td>
+              <td>Use features as rotation angles (Rx/Ry/Rz)</td>
+              <td>Easy on hardware; common for QML</td>
+              <td>Needs feature scaling; may need repeated “data re-uploading”</td>
+            </tr>
+            <tr>
+              <td><b>Amplitude</b></td>
+              <td>Encode a normalized vector into amplitudes</td>
+              <td>Very compact representationally</td>
+              <td>Preparing states can be expensive; hardware implementation is nontrivial</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="warn">
+          Encoding cost is often the hidden bottleneck. Always account for preprocessing + encoding when claiming speedups.
+        </div>
+      </div>
+    </article>
+
+    <!-- Engineering -->
+    <article class="card topic" id="engineering" data-keywords="engineering transpile routing noise mitigation zne readout mitigation randomized compiling benchmarking">
+      <div class="card-header">
+        <h2 class="card-title">18) Engineering: hardware reality, noise mitigation, benchmarking</h2>
+        <span class="tag">Level 3</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Transpilation & routing (why circuits change)</summary>
+          <ul>
+            <li>Hardware has a native gate set + connectivity graph.</li>
+            <li>Your ideal circuit is “compiled” into allowed gates; SWAPs added for connectivity.</li>
+            <li>Depth increases → more errors. So circuit design should respect topology.</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Noise mitigation (common techniques)</summary>
+          <ul>
+            <li><b>Readout mitigation</b>: calibrate and correct measurement errors.</li>
+            <li><b>ZNE</b> (zero-noise extrapolation): run at scaled noise and extrapolate back.</li>
+            <li><b>Symmetry checks</b>: enforce known conserved quantities; discard invalid results.</li>
+            <li><b>Randomized compiling</b>: average coherent errors into stochastic noise.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Benchmarking checklist (report these)</summary>
+          <ul>
+            <li>Qubit count, circuit depth, two-qubit gate count, connectivity assumptions</li>
+            <li>Shots, number of evaluations, optimizer, stopping criteria</li>
+            <li>Simulator vs hardware; if simulator, what noise model</li>
+            <li>Classical baseline runtime + accuracy/objective score</li>
+            <li>Seed control + reproducible config files</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Bio apps -->
+    <article class="card topic" id="bioapps" data-keywords="bioinformatics genomics protein folding optimization networks clustering docking quantum chemistry">
+      <div class="card-header">
+        <h2 class="card-title">19) Bioinformatics use-cases: how problems map to quantum formulations</h2>
+        <span class="tag">Applied thinking</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Optimization mappings (QAOA/annealing-style)</summary>
+          <ul>
+            <li><b>Feature selection</b>: choose a subset of genes/features maximizing score under budget</li>
+            <li><b>Graph problems</b>: max-cut / community detection analogs in biological networks</li>
+            <li><b>Haplotype-like combinatorics</b>: assignment problems (toy-scale today)</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Quantum chemistry direction (VQE-style)</summary>
+          <ul>
+            <li>Molecular electronic structure is naturally expressed as a Hamiltonian.</li>
+            <li>VQE targets ground state energy and properties (research-heavy, but conceptually aligned with QC).</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Practical “today” guidance</summary>
+          <ul>
+            <li>Start with toy datasets and prove your evaluation pipeline is correct.</li>
+            <li>Use dimensionality reduction first (e.g., PCA to 8–32 features) before QML.</li>
+            <li>Always compare to classical baselines and report overhead.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Capstone -->
+    <article class="card topic" id="capstone" data-keywords="capstone project repo template evaluation baseline metrics">
+      <div class="card-header">
+        <h2 class="card-title">20) Capstone projects (choose one)</h2>
+        <span class="tag">Level 2 → 3</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Capstone A: Variational classifier on a small dataset</summary>
+          <ul>
+            <li>Data: synthetic 2D moons / or a small reduced feature dataset (8–16 dims)</li>
+            <li>Encoding: angle encoding (Ry rotations)</li>
+            <li>Model: shallow ansatz + measurement → logits</li>
+            <li>Compare to logistic regression / SVM</li>
+            <li>Report: accuracy, calibration, runtime, circuit depth, shots</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Capstone B: QAOA for a toy optimization problem</summary>
+          <ul>
+            <li>Problem: max-cut on small graphs (n=6–12 nodes)</li>
+            <li>Mapping: Ising Hamiltonian</li>
+            <li>Optimize QAOA angles; compare to classical solver</li>
+            <li>Report: best cut value, approximation ratio, evaluations, depth, noise sensitivity</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Capstone C: Quantum kernel experiment</summary>
+          <ul>
+            <li>Pick a quantum feature map circuit Φ(x)</li>
+            <li>Compute kernel K(x,y) = |⟨Φ(x)|Φ(y)⟩|² on a small dataset</li>
+            <li>Train classical SVM on this kernel; compare to classical kernels</li>
+          </ul>
+        </details>
+
+        <div class="ok">
+          <b>Capstone deliverable suggestion:</b> a GitHub repo with <code>README</code>, config, notebooks, and a short report
+          describing results vs classical baselines + circuit metrics.
+        </div>
+      </div>
+    </article>
+
+    <!-- Tools -->
+    <article class="card topic" id="tools" data-keywords="tools qiskit pennylane cirq braket dwave resources">
+      <div class="card-header">
+        <h2 class="card-title">21) Tools & learning resources</h2>
+        <span class="tag">Practical next steps</span>
+      </div>
+      <div class="card-body">
+        <div class="pillrow">
+          <a class="pill" href="https://qiskit.org/documentation/" target="_blank" rel="noopener">Qiskit docs</a>
+          <a class="pill" href="https://pennylane.ai/" target="_blank" rel="noopener">PennyLane</a>
+          <a class="pill" href="https://quantumai.google/cirq" target="_blank" rel="noopener">Cirq</a>
+          <a class="pill" href="https://docs.aws.amazon.com/braket/latest/developerguide/what-is-braket.html" target="_blank" rel="noopener">AWS Braket</a>
+          <a class="pill" href="https://docs.ocean.dwavesys.com/" target="_blank" rel="noopener">D-Wave Ocean</a>
+        </div>
+
+        <details open>
+          <summary>Suggested learning path (practical)</summary>
+          <ol>
+            <li>Implement pure Python statevector demos (this page)</li>
+            <li>Learn one SDK (Qiskit or PennyLane) for circuit creation + sampling</li>
+            <li>Build one variational classifier toy model and one QAOA toy model</li>
+            <li>Learn noise mitigation + benchmarking and write a reproducible report</li>
+          </ol>
+        </details>
+      </div>
+    </article>
+
+  </section>
+</main>
+
+<!-- =========================
+     CODE SNIPPETS (RAW TEXT)
+========================= -->
+
+<script type="text/plain" id="code-qubit-sim">
+import numpy as np
+
+# Computational basis vectors
+ket0 = np.array([[1.0],[0.0]], dtype=complex)
+ket1 = np.array([[0.0],[1.0]], dtype=complex)
+
+# Example qubit: |psi> = alpha|0> + beta|1>
+alpha = 1/np.sqrt(3)
+beta  = np.sqrt(2/3) * np.exp(1j*np.pi/5)
+
+psi = alpha*ket0 + beta*ket1
+
+p0 = float(np.abs(psi[0,0])**2)
+p1 = float(np.abs(psi[1,0])**2)
+print("P(0)=", p0, "P(1)=", p1, "sum=", p0+p1)
+
+# Sample measurements ("shots")
+shots = 20_000
+outcomes = np.random.choice([0,1], size=shots, p=[p0, p1])
+print("Empirical freq:", np.bincount(outcomes)/shots)
+</script>
+
+<script type="text/plain" id="code-hadamard">
+import numpy as np
+
+ket0 = np.array([[1.0],[0.0]], dtype=complex)
+
+H = (1/np.sqrt(2))*np.array([[1, 1],
+                             [1,-1]], dtype=complex)
+
+psi = H @ ket0  # apply Hadamard to |0>
+p0 = float(np.abs(psi[0,0])**2)
+p1 = float(np.abs(psi[1,0])**2)
+print("After H|0>: P(0)=", p0, "P(1)=", p1)
+</script>
+
+<script type="text/plain" id="code-tensor">
+import numpy as np
+
+ket0 = np.array([[1.0],[0.0]], dtype=complex)
+ket1 = np.array([[0.0],[1.0]], dtype=complex)
+
+# |00> = |0> ⊗ |0>
+ket00 = np.kron(ket0, ket0)
+ket01 = np.kron(ket0, ket1)
+ket10 = np.kron(ket1, ket0)
+ket11 = np.kron(ket1, ket1)
+
+print("ket00 shape:", ket00.shape)  # (4,1)
+</script>
+
+<script type="text/plain" id="code-shots">
+import numpy as np
+
+# Suppose a 2-qubit state has probabilities for bitstrings:
+# 00, 01, 10, 11
+p = np.array([0.1, 0.2, 0.3, 0.4])
+assert abs(p.sum()-1) < 1e-9
+
+shots = 50_000
+idx = np.random.choice(4, size=shots, p=p)
+counts = np.bincount(idx, minlength=4)
+
+labels = ["00","01","10","11"]
+for i,lab in enumerate(labels):
+  print(lab, counts[i], counts[i]/shots)
+</script>
+
+<script type="text/plain" id="code-gates">
+import numpy as np
+
+# Basis
+ket0 = np.array([[1.0],[0.0]], dtype=complex)
+ket1 = np.array([[0.0],[1.0]], dtype=complex)
+
+# Gates
+X = np.array([[0,1],[1,0]], dtype=complex)
+Z = np.array([[1,0],[0,-1]], dtype=complex)
+H = (1/np.sqrt(2))*np.array([[1, 1],
+                             [1,-1]], dtype=complex)
+
+psi = ket0
+psi = H @ psi   # put into superposition
+psi = Z @ psi   # add phase to |1> component
+psi = H @ psi   # interfere back
+
+p0 = float(np.abs(psi[0,0])**2)
+p1 = float(np.abs(psi[1,0])**2)
+print("P(0)=", p0, "P(1)=", p1)
+</script>
+
+<script type="text/plain" id="code-bell">
+import numpy as np
+
+# Basis for 1 qubit
+ket0 = np.array([[1.0],[0.0]], dtype=complex)
+ket1 = np.array([[0.0],[1.0]], dtype=complex)
+
+# Gates
+I = np.eye(2, dtype=complex)
+H = (1/np.sqrt(2))*np.array([[1, 1],
+                             [1,-1]], dtype=complex)
+
+# Two-qubit CNOT (control=qubit0, target=qubit1) in basis |00>,|01>,|10>,|11>
+CNOT = np.array([[1,0,0,0],
+                 [0,1,0,0],
+                 [0,0,0,1],
+                 [0,0,1,0]], dtype=complex)
+
+# Start in |00>
+psi = np.kron(ket0, ket0)
+
+# Apply H on first qubit: (H ⊗ I)|00>
+psi = np.kron(H, I) @ psi
+
+# Apply CNOT: create Bell state
+psi = CNOT @ psi
+
+# Probabilities of outcomes
+probs = np.abs(psi.flatten())**2
+labels = ["00","01","10","11"]
+for lab,pr in zip(labels, probs):
+    print(lab, float(pr))
+
+# Sample
+shots = 20_000
+idx = np.random.choice(4, size=shots, p=probs)
+counts = np.bincount(idx, minlength=4)
+print({labels[i]: int(counts[i]) for i in range(4)})
+</script>
+
+<script type="text/plain" id="code-teleport-pseudo">
+# SDK-style pseudocode (conceptual; adapt to Qiskit/PennyLane/Cirq)
+# Goal: teleport an unknown qubit state |psi> from Alice to Bob.
+
+# qubits: q0 = state to send (Alice), q1 = Alice's entangled half, q2 = Bob's entangled half
+# classical bits: c0, c1 store Alice's measurement results
+
+# 1) Prepare Bell pair between q1 and q2
+H(q1)
+CNOT(q1, q2)
+
+# 2) Bell measurement on (q0, q1)
+CNOT(q0, q1)
+H(q0)
+measure(q0 -> c0)
+measure(q1 -> c1)
+
+# 3) Bob applies corrections based on c0,c1
+# if c1 == 1: apply X to q2
+# if c0 == 1: apply Z to q2
+if (c1 == 1): X(q2)
+if (c0 == 1): Z(q2)
+
+# Now q2 is (ideally) in the original state |psi>.
+</script>
+
+<script type="text/plain" id="code-grover-toy">
+import numpy as np
+
+# 2 qubits => N=4 basis states
+# We'll "mark" state |11> by flipping its phase (oracle).
+# Then apply diffuser: D = 2|s><s| - I, where |s> is uniform superposition.
+
+N = 4
+I = np.eye(N, dtype=complex)
+
+# Uniform superposition |s>
+s = (1/np.sqrt(N))*np.ones((N,1), dtype=complex)
+
+# Oracle: flip phase of |11> (index 3)
+O = np.eye(N, dtype=complex)
+O[3,3] = -1
+
+# Diffuser
+D = 2*(s @ s.T.conj()) - I
+
+# Start in |s>
+psi = s.copy()
+
+# One Grover iteration
+psi = D @ (O @ psi)
+
+probs = np.abs(psi.flatten())**2
+labels = ["00","01","10","11"]
+print("Probabilities after 1 Grover iter:")
+for lab,pr in zip(labels, probs):
+    print(lab, float(pr))
+</script>
+
+<script type="text/plain" id="code-vqc-pseudo">
+# Minimal variational quantum classifier (conceptual pseudocode)
+# Inputs: x (features), y (label), parameters theta
+
+# 1) Encode x into circuit
+# Example: angle encoding with Ry rotations
+for i in range(n_qubits):
+    Ry(x[i], qubit=i)
+
+# 2) Apply trainable ansatz (parameters theta)
+for layer in range(L):
+    for i in range(n_qubits):
+        Ry(theta[layer,i], qubit=i)
+    # entangle (pattern depends on hardware/connectivity)
+    for i in range(n_qubits-1):
+        CNOT(i, i+1)
+
+# 3) Measure expectation as model output (e.g., <Z0>)
+# Use shots to estimate expectation
+pred = expectation(Z(qubit=0))
+
+# 4) Define loss, e.g., logistic or MSE
+loss = (pred - y)**2
+
+# 5) Update theta with classical optimizer
+# theta <- optimizer.step(theta, grad(loss))
+</script>
+
+<script>
+  // Render codeblocks from <script type="text/plain"> sources
+  function renderCodeblocks(){
+    document.querySelectorAll(".codeblock").forEach(el => {
+      const src = el.getAttribute("data-src");
+      const node = document.getElementById(src);
+      if(!node) return;
+      const text = node.textContent.replace(/^\n+|\n+$/g, "");
+
+      const pre = document.createElement("pre");
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+
+      const code = document.createElement("code");
+      code.textContent = text;
+
+      btn.addEventListener("click", async () => {
+        try{
+          await navigator.clipboard.writeText(text);
+          const old = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(()=>btn.textContent=old, 900);
+        }catch(e){
+          btn.textContent = "Copy failed";
+          setTimeout(()=>btn.textContent="Copy", 900);
+        }
+      });
+
+      pre.appendChild(btn);
+      pre.appendChild(code);
+      el.appendChild(pre);
+    });
+  }
+
+  // Search filter across .topic cards
+  function setupSearch(){
+    const input = document.getElementById("search");
+    const topics = () => Array.from(document.querySelectorAll(".topic"));
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      topics().forEach(t => {
+        const kw = (t.getAttribute("data-keywords") || "").toLowerCase();
+        const text = t.innerText.toLowerCase();
+        const show = !q || kw.includes(q) || text.includes(q);
+        t.style.display = show ? "" : "none";
+      });
+    });
+  }
+
+  // Expand/collapse all details
+  function setupExpandCollapse(){
+    const allDetails = () => Array.from(document.querySelectorAll("details"));
+    document.getElementById("expandAll").addEventListener("click", () => allDetails().forEach(d => d.open = true));
+    document.getElementById("collapseAll").addEventListener("click", () => allDetails().forEach(d => d.open = false));
+  }
+
+  // Copy page link
+  function setupCopyLink(){
+    const btn = document.getElementById("copyLink");
+    btn.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(window.location.href);
+        const old = btn.textContent;
+        btn.textContent = "Link copied!";
+        setTimeout(()=>btn.textContent=old, 900);
+      }catch(e){
+        btn.textContent = "Copy failed";
+        setTimeout(()=>btn.textContent="Copy page link", 900);
+      }
+    });
+  }
+
+  // Smooth scroll
+  function setupSmoothScroll(){
+    document.querySelectorAll(".toc a, .pillrow a").forEach(a => {
+      a.addEventListener("click", (e) => {
+        const href = a.getAttribute("href");
+        if(!href || !href.startsWith("#")) return;
+        const target = document.querySelector(href);
+        if(!target) return;
+        e.preventDefault();
+        target.scrollIntoView({behavior:"smooth", block:"start"});
+        history.pushState(null, "", href);
+      });
+    });
+  }
+
+  renderCodeblocks();
+  setupSearch();
+  setupExpandCollapse();
+  setupCopyLink();
+  setupSmoothScroll();
+</script>
+</body>
+</html>
