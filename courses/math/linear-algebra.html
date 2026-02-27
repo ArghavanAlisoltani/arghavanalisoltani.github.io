@@ -1,1 +1,1477 @@
-#
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Linear Algebra — End-to-End Course (Formulas + Solved Problems + Code)</title>
+  <meta name="description" content="A complete end-to-end linear algebra course with formulas, solved problems, intuition, and Python examples. GitHub Pages ready index.html." />
+
+  <!-- MathJax for formulas -->
+  <script>
+    window.MathJax = {
+      tex: {inlineMath: [['\\(','\\)'], ['$', '$']], displayMath: [['\\[','\\]']]},
+      svg: {fontCache: 'global'}
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e9eefc;
+      --muted:#aab6e8;
+      --accent:#7aa2ff;
+      --accent2:#70ffd1;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.20), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(112,255,209,.12), transparent 55%),
+        var(--bg);
+      color:var(--text);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{padding:28px 18px 18px; max-width:1280px; margin:0 auto;}
+    .hero{
+      background: linear-gradient(135deg, rgba(122,162,255,.18), rgba(17,26,51,.0));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px 18px;
+    }
+    h1{margin:0 0 8px; font-size: clamp(22px, 4vw, 36px); letter-spacing:.2px;}
+    .subtitle{margin:0 0 12px; color:var(--muted); line-height:1.6; font-size:15px; max-width:1150px;}
+    .kicker{
+      color:var(--accent2);
+      font-weight:900;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      font-size:12px;
+      margin-top:12px;
+    }
+    .top-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .search-wrap{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex:1;
+      min-width:260px;
+    }
+    input[type="search"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+    }
+    input[type="search"]::placeholder{color:rgba(233,238,252,.55)}
+    .btn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.10)}
+    main{
+      max-width:1280px;
+      margin:0 auto;
+      padding: 0 18px 48px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:14px;
+    }
+    nav{
+      position:sticky;
+      top:14px;
+      align-self:start;
+      height: calc(100vh - 28px);
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.55);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      padding:12px;
+    }
+    nav h2{
+      font-size:13px;
+      margin:6px 8px 10px;
+      color:var(--muted);
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+    .toc a{
+      display:block;
+      padding:8px 10px;
+      border-radius:12px;
+      color:var(--text);
+      border:1px solid transparent;
+      font-size: 14px;
+      line-height:1.35;
+    }
+    .toc a:hover{
+      background: rgba(255,255,255,.06);
+      border-color: var(--border);
+      text-decoration:none;
+    }
+    .content{display:flex; flex-direction:column; gap:12px;}
+    .card{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.45);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-header{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: rgba(15,23,48,.55);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .card-title{margin:0; font-size:16px; line-height:1.35}
+    .tag{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      padding:4px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .card-body{
+      padding:14px 16px 16px;
+      color:var(--text);
+      line-height:1.65;
+      font-size:14.5px;
+    }
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .grid2{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+      margin-top:10px;
+    }
+    .box{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      background: rgba(0,0,0,.20);
+    }
+    .box h3{margin:0 0 6px; font-size:14px}
+    .box p{margin:0; color:var(--muted); font-size:13.5px; line-height:1.55}
+
+    details{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:10px 12px;
+      margin:12px 0 0;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:900;
+      color:var(--text);
+      list-style:none;
+      user-select:none;
+    }
+    summary::-webkit-details-marker{display:none}
+    summary:before{content:"▸"; margin-right:8px; color:var(--muted)}
+    details[open] summary:before{content:"▾"}
+
+    .codeblock pre{
+      margin:10px 0 0;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.32);
+      overflow:auto;
+      padding: 14px 12px 12px;
+      position: relative;
+    }
+    .codeblock code{
+      font-family: var(--mono);
+      font-size: 12.6px;
+      line-height: 1.55;
+      white-space: pre;
+      display:block;
+    }
+    .copy-btn{
+      position:absolute;
+      top:10px;
+      right:10px;
+      padding:6px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+      user-select:none;
+    }
+    .copy-btn:hover{background: rgba(255,255,255,.10)}
+    .pillrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      font-weight:900;
+      font-size:13px;
+    }
+    .pill:hover{background: rgba(255,255,255,.10); text-decoration:none}
+    .warn{
+      border-left: 4px solid rgba(255, 180, 90, .9);
+      padding: 10px 12px;
+      background: rgba(255, 180, 90, .08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    .ok{
+      border-left: 4px solid rgba(112,255,209,.9);
+      padding: 10px 12px;
+      background: rgba(112,255,209,.08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+      margin-top:10px;
+    }
+    th, td{
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+      font-size:13.5px;
+      line-height:1.45;
+    }
+    th{
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-weight:900;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    tr:last-child td{border-bottom:none}
+    ul, ol{margin: 8px 0 0 18px}
+    li{margin: 4px 0}
+    .eq{margin:10px 0 0; padding:10px 12px; border:1px solid var(--border); border-radius:14px; background: rgba(0,0,0,.22)}
+    @media (max-width: 1100px){
+      main{grid-template-columns:1fr}
+      nav{position:relative; height:auto}
+      .grid2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="hero">
+    <h1>Linear Algebra — End-to-End Course</h1>
+    <p class="subtitle">
+      A practical, complete course: vectors → matrices → systems → subspaces → orthogonality → eigenvalues/eigenvectors →
+      diagonalization → SVD → least squares → PCA. Includes formulas, solved problems, and Python examples.
+    </p>
+    <div class="kicker">How to use</div>
+    <p class="subtitle">
+      Use the left navigation in order. Expand sections for solved problems and code. This is a single-file
+      <code>index.html</code> ready for GitHub Pages.
+    </p>
+
+    <div class="top-actions">
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Filter (e.g., 'determinant', 'inverse', 'eigen', 'SVD', 'least squares', 'PCA', 'Gram-Schmidt')…" />
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+      <button class="btn" id="copyLink">Copy page link</button>
+    </div>
+
+    <div class="pillrow">
+      <a class="pill" href="#roadmap">Roadmap</a>
+      <a class="pill" href="#vectors">Vectors</a>
+      <a class="pill" href="#matrices">Matrices</a>
+      <a class="pill" href="#systems">Systems</a>
+      <a class="pill" href="#subspaces">Subspaces</a>
+      <a class="pill" href="#orthogonality">Orthogonality</a>
+      <a class="pill" href="#eigen">Eigen</a>
+      <a class="pill" href="#svd">SVD</a>
+      <a class="pill" href="#leastSquares">Least squares</a>
+      <a class="pill" href="#pca">PCA</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav>
+    <h2>Course map</h2>
+    <div class="toc">
+      <a href="#roadmap">0) Roadmap & learning outcomes</a>
+      <a href="#prereq">1) Prerequisites & notation</a>
+      <a href="#vectors">2) Vectors & geometry</a>
+      <a href="#matrices">3) Matrices as linear maps</a>
+      <a href="#mul">4) Matrix multiplication (why it works)</a>
+      <a href="#systems">5) Solving linear systems (Gaussian elimination)</a>
+      <a href="#rank">6) Rank, pivots, invertibility</a>
+      <a href="#det">7) Determinant (meaning + computation)</a>
+      <a href="#inverse">8) Inverse & conditioning</a>
+      <a href="#subspaces">9) Vector spaces & subspaces</a>
+      <a href="#basis">10) Basis, dimension, change of basis</a>
+      <a href="#orthogonality">11) Dot product, orthogonality, projections</a>
+      <a href="#gs">12) Gram–Schmidt & QR</a>
+      <a href="#eigen">13) Eigenvalues/eigenvectors & diagonalization</a>
+      <a href="#sym">14) Symmetric matrices & PSD</a>
+      <a href="#svd">15) SVD (the most important decomposition)</a>
+      <a href="#leastSquares">16) Least squares & normal equations</a>
+      <a href="#pca">17) PCA from SVD (worked example)</a>
+      <a href="#apps">18) Applications cheat-sheet (ML + bioinformatics)</a>
+      <a href="#problems">19) Extra practice problems (with answers)</a>
+      <a href="#tools">20) Python toolkit & templates</a>
+    </div>
+  </nav>
+
+  <section class="content">
+
+    <!-- Roadmap -->
+    <article class="card topic" id="roadmap" data-keywords="roadmap learning outcomes syllabus">
+      <div class="card-header">
+        <h2 class="card-title">0) Roadmap & learning outcomes</h2>
+        <span class="tag">Big picture</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>You will be able to…</th>
+              <th>Core objects</th>
+              <th>Typical problems</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Vectors & matrices</td>
+              <td>Compute norms, dot products, matrix products</td>
+              <td>\(\mathbf{x}, A\)</td>
+              <td>Distances, angles, transformations</td>
+            </tr>
+            <tr>
+              <td>Systems & rank</td>
+              <td>Solve \(A\mathbf{x}=\mathbf{b}\), analyze solutions</td>
+              <td>Row-reduction, pivots</td>
+              <td>Unique vs infinite vs none</td>
+            </tr>
+            <tr>
+              <td>Subspaces</td>
+              <td>Find basis for column space, null space</td>
+              <td>Span, basis, dimension</td>
+              <td>Independence, dimension counting</td>
+            </tr>
+            <tr>
+              <td>Orthogonality</td>
+              <td>Project vectors, do least squares</td>
+              <td>\(Q^TQ=I\)</td>
+              <td>Best-fit line/plane</td>
+            </tr>
+            <tr>
+              <td>Eigen & SVD</td>
+              <td>Diagonalize (when possible), do PCA, compression</td>
+              <td>\(A=Q\Lambda Q^{-1}\), \(A=U\Sigma V^T\)</td>
+              <td>PCA, low-rank approx</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="ok">
+          <b>Core idea:</b> Linear algebra is the study of <b>linear transformations</b> and how they act on vectors/spaces.
+        </div>
+      </div>
+    </article>
+
+    <!-- Prereq -->
+    <article class="card topic" id="prereq" data-keywords="notation prerequisites scalars vectors matrices transpose">
+      <div class="card-header">
+        <h2 class="card-title">1) Prerequisites & notation</h2>
+        <span class="tag">Setup</span>
+      </div>
+      <div class="card-body">
+        <ul>
+          <li>Arithmetic and basic algebra.</li>
+          <li>Comfort with functions and graphs helps.</li>
+        </ul>
+
+        <details open>
+          <summary>Notation used</summary>
+          <ul>
+            <li>Scalars: \(a\), vectors: \(\mathbf{x}\), matrices: \(A\)</li>
+            <li>Transpose: \(A^T\)</li>
+            <li>Identity: \(I\)</li>
+            <li>Norm: \(\|\mathbf{x}\|\)</li>
+            <li>Dot product: \(\mathbf{x}^T\mathbf{y}\)</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Key “must-know” formulas</summary>
+          <div class="eq">
+            \[
+              \|\mathbf{x}\|_2 = \sqrt{\sum_i x_i^2}, \quad
+              \mathbf{x}\cdot\mathbf{y} = \sum_i x_i y_i, \quad
+              \cos\theta = \frac{\mathbf{x}\cdot\mathbf{y}}{\|\mathbf{x}\|\|\mathbf{y}\|}
+            \]
+          </div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Vectors -->
+    <article class="card topic" id="vectors" data-keywords="vectors norm dot product angle distance geometry">
+      <div class="card-header">
+        <h2 class="card-title">2) Vectors & geometry</h2>
+        <span class="tag">Core</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Vector as point</h3>
+            <p>\(\mathbf{x}=(x_1,x_2,\dots,x_n)\) can represent a point in \(n\)-dimensional space.</p>
+          </div>
+          <div class="box">
+            <h3>Vector as direction</h3>
+            <p>A vector can represent a direction + magnitude (length).</p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>Formulas</summary>
+          <div class="eq">
+            \[
+              \text{Distance: } d(\mathbf{x},\mathbf{y}) = \|\mathbf{x}-\mathbf{y}\|_2
+            \]
+            \[
+              \text{Projection: } \mathrm{proj}_{\mathbf{u}}(\mathbf{x}) = \frac{\mathbf{u}^T\mathbf{x}}{\mathbf{u}^T\mathbf{u}}\mathbf{u}
+            \]
+          </div>
+        </details>
+
+        <details open>
+          <summary>Solved problem: angle between two vectors</summary>
+          <p><b>Problem:</b> Let \(\mathbf{x}=(1,2,2)\) and \(\mathbf{y}=(2,1,2)\). Find the angle \(\theta\).</p>
+          <div class="eq">
+            \[
+              \mathbf{x}\cdot\mathbf{y} = 1\cdot 2 + 2\cdot 1 + 2\cdot 2 = 2+2+4=8
+            \]
+            \[
+              \|\mathbf{x}\| = \sqrt{1^2+2^2+2^2}=\sqrt{9}=3,\quad
+              \|\mathbf{y}\| = \sqrt{2^2+1^2+2^2}=\sqrt{9}=3
+            \]
+            \[
+              \cos\theta = \frac{8}{3\cdot 3}=\frac{8}{9}\Rightarrow
+              \theta = \arccos\left(\frac{8}{9}\right)
+            \]
+          </div>
+          <p class="muted small">You can compute \(\arccos(8/9)\) in degrees or radians using Python.</p>
+        </details>
+
+        <details>
+          <summary>Python example: dot product, norms, angle</summary>
+          <div class="codeblock" data-src="code-vectors" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Matrices -->
+    <article class="card topic" id="matrices" data-keywords="matrices linear transformation matrix vector multiplication columns">
+      <div class="card-header">
+        <h2 class="card-title">3) Matrices as linear maps</h2>
+        <span class="tag">Meaning</span>
+      </div>
+      <div class="card-body">
+        <p>
+          A matrix \(A\in\mathbb{R}^{m\times n}\) defines a function \(f(\mathbf{x})=A\mathbf{x}\)
+          that maps \(\mathbb{R}^n \to \mathbb{R}^m\).
+        </p>
+
+        <details open>
+          <summary>Column interpretation</summary>
+          <p>If \(A=[\mathbf{a}_1 \ \mathbf{a}_2 \ \dots \ \mathbf{a}_n]\) (columns), then:</p>
+          <div class="eq">
+            \[
+              A\mathbf{x} = x_1\mathbf{a}_1 + x_2\mathbf{a}_2 + \cdots + x_n\mathbf{a}_n
+            \]
+          </div>
+          <p class="muted small">This shows why solutions to \(A\mathbf{x}=\mathbf{b}\) are about representing \(\mathbf{b}\) as a linear combination of columns.</p>
+        </details>
+
+        <details open>
+          <summary>Solved problem: compute \(A\mathbf{x}\)</summary>
+          <p><b>Problem:</b> \(A=\begin{bmatrix}1&2\\3&4\end{bmatrix}\), \(\mathbf{x}=\begin{bmatrix}5\\6\end{bmatrix}\). Compute \(A\mathbf{x}\).</p>
+          <div class="eq">
+            \[
+              A\mathbf{x} =
+              \begin{bmatrix}1&2\\3&4\end{bmatrix}
+              \begin{bmatrix}5\\6\end{bmatrix}
+              =
+              \begin{bmatrix}1\cdot 5 +2\cdot 6\\3\cdot 5+4\cdot 6\end{bmatrix}
+              =
+              \begin{bmatrix}17\\39\end{bmatrix}
+            \]
+          </div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Multiplication -->
+    <article class="card topic" id="mul" data-keywords="matrix multiplication composition associativity distributive">
+      <div class="card-header">
+        <h2 class="card-title">4) Matrix multiplication = function composition</h2>
+        <span class="tag">Concept</span>
+      </div>
+      <div class="card-body">
+        <p>
+          If \(A\) and \(B\) are matrices, then \(AB\) means “apply \(B\) first, then \(A\)”.
+        </p>
+
+        <details open>
+          <summary>Solved problem: compute \(AB\)</summary>
+          <p><b>Problem:</b>
+            \(A=\begin{bmatrix}1&2\\0&1\end{bmatrix}\),
+            \(B=\begin{bmatrix}2&0\\1&3\end{bmatrix}\).
+            Compute \(AB\).
+          </p>
+          <div class="eq">
+            \[
+              AB=
+              \begin{bmatrix}1&2\\0&1\end{bmatrix}
+              \begin{bmatrix}2&0\\1&3\end{bmatrix}
+              =
+              \begin{bmatrix}
+                1\cdot 2+2\cdot 1 & 1\cdot 0 +2\cdot 3 \\
+                0\cdot 2+1\cdot 1 & 0\cdot 0 +1\cdot 3
+              \end{bmatrix}
+              =
+              \begin{bmatrix}4&6\\1&3\end{bmatrix}
+            \]
+          </div>
+        </details>
+
+        <div class="warn">
+          In general, \(AB \neq BA\). Order matters because function composition order matters.
+        </div>
+      </div>
+    </article>
+
+    <!-- Systems -->
+    <article class="card topic" id="systems" data-keywords="linear systems gaussian elimination rref solve">
+      <div class="card-header">
+        <h2 class="card-title">5) Solving linear systems (Gaussian elimination)</h2>
+        <span class="tag">Essential</span>
+      </div>
+      <div class="card-body">
+        <p>We solve \(A\mathbf{x}=\mathbf{b}\) by turning \([A|\mathbf{b}]\) into row-reduced echelon form (RREF).</p>
+
+        <details open>
+          <summary>Solved problem: solve a 2×2 system</summary>
+          <p><b>Problem:</b>
+            \(\begin{cases}
+              x+2y=5\\
+              3x+4y=11
+            \end{cases}\)
+          </p>
+          <div class="eq">
+            \[
+              \left[\begin{array}{cc|c}
+                1 & 2 & 5\\
+                3 & 4 & 11
+              \end{array}\right]
+              \xrightarrow{R_2 \leftarrow R_2-3R_1}
+              \left[\begin{array}{cc|c}
+                1 & 2 & 5\\
+                0 & -2 & -4
+              \end{array}\right]
+            \]
+            \[
+              -2y=-4 \Rightarrow y=2,\quad x+2(2)=5 \Rightarrow x=1
+            \]
+          </div>
+          <p><b>Answer:</b> \((x,y)=(1,2)\).</p>
+        </details>
+
+        <details>
+          <summary>General solution types</summary>
+          <ul>
+            <li><b>Unique</b> solution: full pivots (square & invertible).</li>
+            <li><b>Infinite</b> solutions: free variables (underdetermined).</li>
+            <li><b>No</b> solution: inconsistent row like \([0\ 0\ |\ 1]\).</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Rank -->
+    <article class="card topic" id="rank" data-keywords="rank pivots invertible nullity">
+      <div class="card-header">
+        <h2 class="card-title">6) Rank, pivots, invertibility</h2>
+        <span class="tag">Structure</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Definitions</summary>
+          <ul>
+            <li><b>Rank</b>: number of pivots (dimension of column space).</li>
+            <li><b>Nullity</b>: dimension of null space (solutions to \(A\mathbf{x}=0\)).</li>
+          </ul>
+          <div class="eq">
+            \[
+              \text{Rank-Nullity Theorem: }\quad \mathrm{rank}(A)+\mathrm{nullity}(A)=n
+            \]
+          </div>
+        </details>
+
+        <details open>
+          <summary>Solved problem: rank and null space</summary>
+          <p><b>Problem:</b> Find rank and a basis for null space of \(A=\begin{bmatrix}1&2&3\\2&4&6\end{bmatrix}\).</p>
+          <div class="eq">
+            \[
+              \left[\begin{array}{ccc}
+                1&2&3\\
+                2&4&6
+              \end{array}\right]
+              \xrightarrow{R_2\leftarrow R_2-2R_1}
+              \left[\begin{array}{ccc}
+                1&2&3\\
+                0&0&0
+              \end{array}\right]
+            \]
+          </div>
+          <p>
+            There is 1 pivot \(\Rightarrow \mathrm{rank}(A)=1\). Let \(\mathbf{x}=(x_1,x_2,x_3)\).
+            From \(x_1+2x_2+3x_3=0\Rightarrow x_1=-2x_2-3x_3\).
+          </p>
+          <div class="eq">
+            \[
+              \mathbf{x}=
+              x_2\begin{bmatrix}-2\\1\\0\end{bmatrix}+
+              x_3\begin{bmatrix}-3\\0\\1\end{bmatrix}
+              \Rightarrow
+              \mathcal{N}(A)=\mathrm{span}\left\{
+              \begin{bmatrix}-2\\1\\0\end{bmatrix},
+              \begin{bmatrix}-3\\0\\1\end{bmatrix}
+              \right\}
+            \]
+          </div>
+          <p><b>Nullity</b> is 2, consistent with \(n=3\): rank 1 + nullity 2 = 3.</p>
+        </details>
+      </div>
+    </article>
+
+    <!-- Determinant -->
+    <article class="card topic" id="det" data-keywords="determinant area volume invertibility">
+      <div class="card-header">
+        <h2 class="card-title">7) Determinant: geometric meaning + computation</h2>
+        <span class="tag">Concept</span>
+      </div>
+      <div class="card-body">
+        <p>
+          For a square matrix \(A\), \(\det(A)\) measures how volumes scale under the transformation \(A\).
+          If \(\det(A)=0\), the transformation squashes space into a lower dimension ⇒ not invertible.
+        </p>
+        <details open>
+          <summary>2×2 determinant</summary>
+          <div class="eq">
+            \[
+              \det\begin{pmatrix}a&b\\c&d\end{pmatrix} = ad - bc
+            \]
+          </div>
+        </details>
+
+        <details open>
+          <summary>Solved problem: compute determinant and interpret</summary>
+          <p><b>Problem:</b> \(A=\begin{bmatrix}3&1\\2&4\end{bmatrix}\). Compute \(\det(A)\) and interpret.</p>
+          <div class="eq">
+            \[
+              \det(A)=3\cdot 4 - 1\cdot 2 = 12-2=10
+            \]
+          </div>
+          <p>
+            Interpretation: areas are multiplied by 10, and orientation is preserved (positive determinant).
+          </p>
+        </details>
+      </div>
+    </article>
+
+    <!-- Inverse -->
+    <article class="card topic" id="inverse" data-keywords="inverse conditioning numerical stability">
+      <div class="card-header">
+        <h2 class="card-title">8) Inverse & conditioning (why numerics matter)</h2>
+        <span class="tag">Practice</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Definition</summary>
+          <div class="eq">
+            \[
+              A^{-1}\text{ exists if } AA^{-1}=A^{-1}A=I
+            \]
+          </div>
+          <p class="muted">
+            In practice, you rarely compute \(A^{-1}\) explicitly. You solve \(A\mathbf{x}=\mathbf{b}\) directly
+            (more stable and faster).
+          </p>
+        </details>
+
+        <details open>
+          <summary>Solved problem: inverse of 2×2</summary>
+          <p><b>Problem:</b> Find \(A^{-1}\) for \(A=\begin{bmatrix}a&b\\c&d\end{bmatrix}\), \(\det(A)\neq 0\).</p>
+          <div class="eq">
+            \[
+              A^{-1}=\frac{1}{ad-bc}\begin{bmatrix}d&-b\\-c&a\end{bmatrix}
+            \]
+          </div>
+        </details>
+
+        <details>
+          <summary>Condition number intuition</summary>
+          <p>
+            A matrix can be invertible but still <b>ill-conditioned</b>: small noise in \(\mathbf{b}\) causes large changes in \(\mathbf{x}\).
+            The condition number (often \(\kappa(A)=\|A\|\|A^{-1}\|\)) measures sensitivity.
+          </p>
+        </details>
+      </div>
+    </article>
+
+    <!-- Subspaces -->
+    <article class="card topic" id="subspaces" data-keywords="vector space subspace span linear independence">
+      <div class="card-header">
+        <h2 class="card-title">9) Vector spaces & subspaces</h2>
+        <span class="tag">Structure</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Key subspaces for \(A\in \mathbb{R}^{m\times n}\)</summary>
+          <ul>
+            <li><b>Column space</b> \(\mathcal{C}(A)\subseteq \mathbb{R}^m\): all \(A\mathbf{x}\)</li>
+            <li><b>Null space</b> \(\mathcal{N}(A)\subseteq \mathbb{R}^n\): all \(\mathbf{x}\) with \(A\mathbf{x}=0\)</li>
+            <li><b>Row space</b> \(\mathcal{C}(A^T)\subseteq \mathbb{R}^n\)</li>
+            <li><b>Left null space</b> \(\mathcal{N}(A^T)\subseteq \mathbb{R}^m\)</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Solved problem: is it a subspace?</summary>
+          <p><b>Problem:</b> Is \(S=\{(x,y)\in\mathbb{R}^2 : x+y=1\}\) a subspace?</p>
+          <p>
+            A subspace must contain \(\mathbf{0}=(0,0)\). But \(0+0\neq 1\), so \(\mathbf{0}\notin S\).
+            Therefore <b>not</b> a subspace (it’s an affine line).
+          </p>
+        </details>
+      </div>
+    </article>
+
+    <!-- Basis -->
+    <article class="card topic" id="basis" data-keywords="basis dimension change of basis coordinate vector">
+      <div class="card-header">
+        <h2 class="card-title">10) Basis, dimension, change of basis</h2>
+        <span class="tag">Core</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Definition</summary>
+          <ul>
+            <li>A <b>basis</b> is a set of vectors that is (1) linearly independent and (2) spans the space.</li>
+            <li>The number of basis vectors = <b>dimension</b>.</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Solved problem: check independence</summary>
+          <p><b>Problem:</b> Are \(\mathbf{v}_1=(1,0,1)\), \(\mathbf{v}_2=(0,1,1)\), \(\mathbf{v}_3=(1,1,2)\) independent?</p>
+          <p>Notice \(\mathbf{v}_3=\mathbf{v}_1+\mathbf{v}_2\). So they are <b>dependent</b>.</p>
+        </details>
+
+        <details>
+          <summary>Change of basis (concept)</summary>
+          <p>
+            If \(B\) is a basis matrix with basis vectors as columns, then coordinates \(\mathbf{c}\) satisfy:
+          </p>
+          <div class="eq">
+            \[
+              \mathbf{x} = B\mathbf{c}\quad \Rightarrow \quad \mathbf{c} = B^{-1}\mathbf{x}
+            \]
+          </div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Orthogonality -->
+    <article class="card topic" id="orthogonality" data-keywords="orthogonality dot product projection least squares">
+      <div class="card-header">
+        <h2 class="card-title">11) Dot product, orthogonality, projections</h2>
+        <span class="tag">Most used</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Orthogonality and projection</summary>
+          <div class="eq">
+            \[
+              \mathbf{x}\perp \mathbf{y} \iff \mathbf{x}^T\mathbf{y}=0
+            \]
+            \[
+              \mathrm{proj}_{\mathbf{u}}(\mathbf{x}) = \frac{\mathbf{u}^T\mathbf{x}}{\mathbf{u}^T\mathbf{u}}\mathbf{u}
+            \]
+          </div>
+        </details>
+
+        <details open>
+          <summary>Solved problem: projection</summary>
+          <p><b>Problem:</b> Project \(\mathbf{x}=(3,4)\) onto \(\mathbf{u}=(1,2)\).</p>
+          <div class="eq">
+            \[
+              \mathbf{u}^T\mathbf{x}=1\cdot 3+2\cdot 4=11,\quad
+              \mathbf{u}^T\mathbf{u}=1^2+2^2=5
+            \]
+            \[
+              \mathrm{proj}_{\mathbf{u}}(\mathbf{x})=\frac{11}{5}\begin{bmatrix}1\\2\end{bmatrix}
+              =\begin{bmatrix}11/5\\22/5\end{bmatrix}
+            \]
+          </div>
+        </details>
+
+        <details>
+          <summary>Python example: projection and residual</summary>
+          <div class="codeblock" data-src="code-proj" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Gram-Schmidt -->
+    <article class="card topic" id="gs" data-keywords="gram schmidt qr orthonormal basis">
+      <div class="card-header">
+        <h2 class="card-title">12) Gram–Schmidt and QR decomposition</h2>
+        <span class="tag">Bridge to least squares</span>
+      </div>
+      <div class="card-body">
+        <p>Gram–Schmidt turns independent vectors into an orthonormal basis.</p>
+
+        <details open>
+          <summary>Algorithm (2 vectors)</summary>
+          <div class="eq">
+            \[
+              \mathbf{q}_1=\frac{\mathbf{a}_1}{\|\mathbf{a}_1\|},\quad
+              \mathbf{u}_2=\mathbf{a}_2-(\mathbf{q}_1^T\mathbf{a}_2)\mathbf{q}_1,\quad
+              \mathbf{q}_2=\frac{\mathbf{u}_2}{\|\mathbf{u}_2\|}
+            \]
+          </div>
+        </details>
+
+        <details open>
+          <summary>Solved problem: Gram–Schmidt on two vectors</summary>
+          <p><b>Problem:</b> \(\mathbf{a}_1=(1,1)\), \(\mathbf{a}_2=(1,0)\). Find an orthonormal basis.</p>
+          <div class="eq">
+            \[
+              \mathbf{q}_1=\frac{1}{\sqrt{2}}(1,1)
+            \]
+            \[
+              \mathbf{u}_2=\mathbf{a}_2-(\mathbf{q}_1^T\mathbf{a}_2)\mathbf{q}_1
+            \]
+            \[
+              \mathbf{q}_1^T\mathbf{a}_2=\frac{1}{\sqrt{2}}(1,1)\cdot(1,0)=\frac{1}{\sqrt{2}}
+            \]
+            \[
+              \mathbf{u}_2=(1,0)-\frac{1}{\sqrt{2}}\cdot\frac{1}{\sqrt{2}}(1,1)=(1,0)-\frac{1}{2}(1,1)=\left(\frac{1}{2},-\frac{1}{2}\right)
+            \]
+            \[
+              \mathbf{q}_2=\frac{1}{\sqrt{(1/2)^2+(−1/2)^2}}\left(\frac{1}{2},-\frac{1}{2}\right)=\frac{1}{\sqrt{2}}(1,-1)
+            \]
+          </div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Eigen -->
+    <article class="card topic" id="eigen" data-keywords="eigenvalues eigenvectors diagonalization characteristic polynomial">
+      <div class="card-header">
+        <h2 class="card-title">13) Eigenvalues/eigenvectors & diagonalization</h2>
+        <span class="tag">Big concept</span>
+      </div>
+      <div class="card-body">
+        <p>
+          \(\mathbf{v}\neq 0\) is an eigenvector of \(A\) with eigenvalue \(\lambda\) if:
+          \(A\mathbf{v}=\lambda \mathbf{v}\).
+        </p>
+        <details open>
+          <summary>How to find eigenvalues</summary>
+          <div class="eq">
+            \[
+              \det(A-\lambda I)=0
+            \]
+          </div>
+        </details>
+
+        <details open>
+          <summary>Solved problem: eigenvalues/eigenvectors of a 2×2</summary>
+          <p><b>Problem:</b> \(A=\begin{bmatrix}2&1\\1&2\end{bmatrix}\). Find eigenvalues and eigenvectors.</p>
+          <div class="eq">
+            \[
+              \det\left(\begin{bmatrix}2-\lambda&1\\1&2-\lambda\end{bmatrix}\right)
+              =(2-\lambda)^2-1=0
+            \]
+            \[
+              (2-\lambda)^2=1 \Rightarrow 2-\lambda=\pm 1 \Rightarrow \lambda_1=3,\ \lambda_2=1
+            \]
+            For \(\lambda_1=3\):
+            \[
+              (A-3I)\mathbf{v}=0 \Rightarrow \begin{bmatrix}-1&1\\1&-1\end{bmatrix}\mathbf{v}=0
+              \Rightarrow v_1=v_2 \Rightarrow \mathbf{v}\propto(1,1)
+            \]
+            For \(\lambda_2=1\):
+            \[
+              (A-I)\mathbf{v}=0 \Rightarrow \begin{bmatrix}1&1\\1&1\end{bmatrix}\mathbf{v}=0
+              \Rightarrow v_1=-v_2 \Rightarrow \mathbf{v}\propto(1,-1)
+            \]
+          </div>
+        </details>
+
+        <details>
+          <summary>Diagonalization</summary>
+          <p>If \(A\) has \(n\) independent eigenvectors, then \(A=V\Lambda V^{-1}\).</p>
+          <div class="eq">
+            \[
+              A=V\Lambda V^{-1}
+            \]
+          </div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Symmetric -->
+    <article class="card topic" id="sym" data-keywords="symmetric psd positive semidefinite quadratic form">
+      <div class="card-header">
+        <h2 class="card-title">14) Symmetric matrices & PSD</h2>
+        <span class="tag">ML-critical</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Key facts</summary>
+          <ul>
+            <li>If \(A=A^T\) (symmetric), eigenvalues are real and eigenvectors are orthogonal.</li>
+            <li>\(A\) is <b>positive semidefinite</b> (PSD) if \(\mathbf{x}^TA\mathbf{x}\ge 0\) for all \(\mathbf{x}\).</li>
+            <li>PSD ⇔ all eigenvalues \(\ge 0\) (for symmetric matrices).</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Solved problem: check PSD by eigenvalues</summary>
+          <p><b>Problem:</b> Is \(A=\begin{bmatrix}2&-1\\-1&2\end{bmatrix}\) PSD?</p>
+          <p>
+            Its eigenvalues are \(1\) and \(3\) (both positive), so it is PSD (in fact positive definite).
+          </p>
+        </details>
+      </div>
+    </article>
+
+    <!-- SVD -->
+    <article class="card topic" id="svd" data-keywords="svd singular values low rank approximation compression">
+      <div class="card-header">
+        <h2 class="card-title">15) SVD: the most important decomposition</h2>
+        <span class="tag">Central tool</span>
+      </div>
+      <div class="card-body">
+        <p>
+          Any matrix \(A\in\mathbb{R}^{m\times n}\) can be written:
+          \(A=U\Sigma V^T\).
+        </p>
+        <details open>
+          <summary>Formula</summary>
+          <div class="eq">
+            \[
+              A=U\Sigma V^T
+            \]
+          </div>
+          <ul>
+            <li>\(U\): orthonormal columns (left singular vectors)</li>
+            <li>\(\Sigma\): diagonal with singular values \(\sigma_1\ge \sigma_2\ge\cdots\ge 0\)</li>
+            <li>\(V\): orthonormal columns (right singular vectors)</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Why SVD matters</summary>
+          <ul>
+            <li>Best low-rank approximation (compression/denoising)</li>
+            <li>PCA is SVD on centered data</li>
+            <li>Conditioning and numerical stability</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Python example: compute SVD and rank-k approximation</summary>
+          <div class="codeblock" data-src="code-svd" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Least Squares -->
+    <article class="card topic" id="leastSquares" data-keywords="least squares regression normal equations projection">
+      <div class="card-header">
+        <h2 class="card-title">16) Least squares & normal equations (best-fit solution)</h2>
+        <span class="tag">Most applied</span>
+      </div>
+      <div class="card-body">
+        <p>
+          When \(A\mathbf{x}=\mathbf{b}\) has no exact solution (overdetermined), we solve:
+          \(\min_{\mathbf{x}}\|A\mathbf{x}-\mathbf{b}\|_2^2\).
+        </p>
+
+        <details open>
+          <summary>Normal equations</summary>
+          <div class="eq">
+            \[
+              A^T A\mathbf{x} = A^T \mathbf{b}
+            \]
+          </div>
+          <p class="muted small">In practice use QR or SVD rather than explicitly forming \(A^TA\).</p>
+        </details>
+
+        <details open>
+          <summary>Solved problem: best-fit line (tiny dataset)</summary>
+          <p><b>Problem:</b> Fit \(y\approx \beta_0+\beta_1 x\) to points \((0,1),(1,2),(2,2)\).</p>
+          <p>Set up \(A\mathbf{\beta}=\mathbf{y}\) where \(\mathbf{\beta}=(\beta_0,\beta_1)\):</p>
+          <div class="eq">
+            \[
+              A=\begin{bmatrix}
+                1&0\\
+                1&1\\
+                1&2
+              \end{bmatrix},\quad
+              \mathbf{y}=\begin{bmatrix}1\\2\\2\end{bmatrix}
+            \]
+            \[
+              A^TA=
+              \begin{bmatrix}
+                3&3\\
+                3&5
+              \end{bmatrix},\quad
+              A^T\mathbf{y}=
+              \begin{bmatrix}
+                5\\
+                6
+              \end{bmatrix}
+            \]
+            Solve:
+            \[
+              \begin{bmatrix}
+                3&3\\
+                3&5
+              \end{bmatrix}
+              \begin{bmatrix}\beta_0\\\beta_1\end{bmatrix}
+              =
+              \begin{bmatrix}5\\6\end{bmatrix}
+            \]
+          </div>
+          <p>
+            From first equation: \(3\beta_0+3\beta_1=5\Rightarrow \beta_0+\beta_1=5/3\).
+            From second: \(3\beta_0+5\beta_1=6\).
+            Substitute \(\beta_0=5/3-\beta_1\):
+            \(3(5/3-\beta_1)+5\beta_1=6\Rightarrow 5-3\beta_1+5\beta_1=6\Rightarrow 2\beta_1=1\Rightarrow \beta_1=1/2\).
+            Then \(\beta_0=5/3-1/2=10/6-3/6=7/6\).
+          </p>
+          <p><b>Answer:</b> \(\hat{y}=\frac{7}{6}+\frac{1}{2}x\).</p>
+        </details>
+
+        <details>
+          <summary>Python example: least squares with numpy</summary>
+          <div class="codeblock" data-src="code-lstsq" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- PCA -->
+    <article class="card topic" id="pca" data-keywords="pca svd covariance eigenvectors variance explained">
+      <div class="card-header">
+        <h2 class="card-title">17) PCA from SVD (worked example)</h2>
+        <span class="tag">High value</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Core idea</summary>
+          <p>
+            PCA finds directions (principal components) that maximize variance. For a centered data matrix \(X\) (samples × features),
+            PCA can be computed via SVD:
+          </p>
+          <div class="eq">
+            \[
+              X = U\Sigma V^T
+            \]
+          </div>
+          <p>
+            The columns of \(V\) are principal directions; \(\Sigma^2\) relates to explained variance.
+          </p>
+        </details>
+
+        <details open>
+          <summary>Worked mini example (2D)</summary>
+          <p><b>Data:</b> points \((2,0),(0,2),(3,1)\). Center them and compute PCA in Python (shown below).</p>
+          <div class="muted small">This is best done numerically; the key is understanding what the output means.</div>
+        </details>
+
+        <details>
+          <summary>Python example: PCA using SVD + explained variance</summary>
+          <div class="codeblock" data-src="code-pca" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Applications -->
+    <article class="card topic" id="apps" data-keywords="applications machine learning bioinformatics pca regression svd">
+      <div class="card-header">
+        <h2 class="card-title">18) Applications cheat-sheet (ML + bioinformatics)</h2>
+        <span class="tag">Why you care</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>Task</th>
+              <th>Linear algebra concept</th>
+              <th>Where it appears</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Regression</td>
+              <td>Least squares, QR/SVD</td>
+              <td>Bulk RNA-seq covariate models, eQTL, trait prediction</td>
+            </tr>
+            <tr>
+              <td>PCA / dimensionality reduction</td>
+              <td>SVD, eigenvectors</td>
+              <td>Population structure, scRNA-seq PCA, batch effects exploration</td>
+            </tr>
+            <tr>
+              <td>Clustering</td>
+              <td>Distances, projections</td>
+              <td>UMAP input, kNN graphs (via PCA), spectral methods</td>
+            </tr>
+            <tr>
+              <td>Stability / noise</td>
+              <td>Condition number</td>
+              <td>Ill-conditioned matrices in inference and deconvolution</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <!-- Extra problems -->
+    <article class="card topic" id="problems" data-keywords="practice problems answers solutions">
+      <div class="card-header">
+        <h2 class="card-title">19) Extra practice problems (with answers)</h2>
+        <span class="tag">Practice</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Problem set A (answers included)</summary>
+          <ol>
+            <li>
+              Compute \(\| (2,-1,2)\|_2\).
+              <div class="muted small">Answer: \(\sqrt{4+1+4}=3\).</div>
+            </li>
+            <li>
+              Solve: \(\begin{cases}2x+y=1\\x-y=2\end{cases}\).
+              <div class="muted small">Answer: \(x=1,\ y=-1\).</div>
+            </li>
+            <li>
+              Find \(\det\begin{bmatrix}1&3\\2&5\end{bmatrix}\).
+              <div class="muted small">Answer: \(1\cdot5-3\cdot2=-1\).</div>
+            </li>
+            <li>
+              If \(A\) is \(3\times 5\), what are the dimensions of \(\mathcal{N}(A)\) and \(\mathcal{C}(A)\) bounds?
+              <div class="muted small">Answer: rank ≤ 3; nullity = 5 − rank ≥ 2.</div>
+            </li>
+          </ol>
+        </details>
+      </div>
+    </article>
+
+    <!-- Tools -->
+    <article class="card topic" id="tools" data-keywords="python numpy templates code">
+      <div class="card-header">
+        <h2 class="card-title">20) Python toolkit & templates</h2>
+        <span class="tag">Code</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>NumPy essentials for linear algebra</summary>
+          <div class="codeblock" data-src="code-numpy" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+  </section>
+</main>
+
+<!-- =========================
+     CODE SNIPPETS (RAW TEXT)
+========================= -->
+
+<script type="text/plain" id="code-vectors">
+import numpy as np
+
+x = np.array([1,2,2], dtype=float)
+y = np.array([2,1,2], dtype=float)
+
+dot = x @ y
+nx = np.linalg.norm(x)
+ny = np.linalg.norm(y)
+
+cos_theta = dot / (nx * ny)
+theta_rad = np.arccos(np.clip(cos_theta, -1, 1))
+theta_deg = theta_rad * 180/np.pi
+
+print("dot:", dot)
+print("||x||:", nx, "||y||:", ny)
+print("cos(theta):", cos_theta)
+print("theta (rad):", theta_rad, "theta (deg):", theta_deg)
+</script>
+
+<script type="text/plain" id="code-proj">
+import numpy as np
+
+x = np.array([3,4], dtype=float)
+u = np.array([1,2], dtype=float)
+
+proj = (u @ x) / (u @ u) * u
+resid = x - proj
+
+print("projection:", proj)
+print("residual:", resid)
+print("check orthogonality (u·resid):", u @ resid)
+</script>
+
+<script type="text/plain" id="code-svd">
+import numpy as np
+
+A = np.array([[3,1,1],
+              [-1,3,1]], dtype=float)
+
+U, s, VT = np.linalg.svd(A, full_matrices=False)
+Sigma = np.diag(s)
+
+print("Singular values:", s)
+
+# rank-1 approximation
+A1 = (U[:, [0]] @ np.diag([s[0]]) @ VT[[0], :])
+print("A1:\n", A1)
+print("Frobenius error ||A-A1||:", np.linalg.norm(A - A1, ord='fro'))
+</script>
+
+<script type="text/plain" id="code-lstsq">
+import numpy as np
+
+# points: (0,1), (1,2), (2,2)
+x = np.array([0,1,2], dtype=float)
+y = np.array([1,2,2], dtype=float)
+
+A = np.column_stack([np.ones_like(x), x])  # [1, x]
+beta, residuals, rank, s = np.linalg.lstsq(A, y, rcond=None)
+
+print("beta0, beta1 =", beta)
+print("residuals:", residuals)
+</script>
+
+<script type="text/plain" id="code-pca">
+import numpy as np
+
+# samples x features (3 points in 2D)
+X = np.array([[2,0],
+              [0,2],
+              [3,1]], dtype=float)
+
+# center
+Xc = X - X.mean(axis=0, keepdims=True)
+
+# SVD
+U, s, VT = np.linalg.svd(Xc, full_matrices=False)
+
+# principal directions are rows of VT (or columns of V)
+V = VT.T
+
+# explained variance ratio:
+# For centered data: variance along PC_i proportional to s_i^2 / (n-1)
+n = X.shape[0]
+var = (s**2) / (n-1)
+explained_ratio = var / var.sum()
+
+print("Principal directions (columns):\n", V)
+print("Singular values:", s)
+print("Explained variance ratio:", explained_ratio)
+
+# project data onto first PC
+pc1_scores = Xc @ V[:,0]
+print("PC1 scores:", pc1_scores)
+</script>
+
+<script type="text/plain" id="code-numpy">
+import numpy as np
+
+# Create vectors/matrices
+x = np.array([1,2,3], dtype=float)
+A = np.array([[1,2],[3,4],[5,6]], dtype=float)  # 3x2
+
+# Transpose
+AT = A.T
+
+# Matrix-vector / matrix-matrix products
+b = np.array([1,1], dtype=float)
+Ax = A @ b
+
+# Norms
+norm2 = np.linalg.norm(x)           # L2
+normF = np.linalg.norm(A, 'fro')    # Frobenius
+
+# Solve square linear system
+M = np.array([[2,1],[1,3]], dtype=float)
+c = np.array([1,2], dtype=float)
+sol = np.linalg.solve(M, c)
+
+# Least squares (overdetermined)
+beta, residuals, rank, s = np.linalg.lstsq(A, Ax, rcond=None)
+
+# Eigenvalues (square)
+w, V = np.linalg.eig(M)
+
+# SVD (any shape)
+U, svals, VT = np.linalg.svd(A, full_matrices=False)
+</script>
+
+<script>
+  function renderCodeblocks(){
+    document.querySelectorAll(".codeblock").forEach(el => {
+      const src = el.getAttribute("data-src");
+      const node = document.getElementById(src);
+      if(!node) return;
+      const text = node.textContent.replace(/^\n+|\n+$/g, "");
+
+      const pre = document.createElement("pre");
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+
+      const code = document.createElement("code");
+      code.textContent = text;
+
+      btn.addEventListener("click", async () => {
+        try{
+          await navigator.clipboard.writeText(text);
+          const old = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(()=>btn.textContent=old, 900);
+        }catch(e){
+          btn.textContent = "Copy failed";
+          setTimeout(()=>btn.textContent="Copy", 900);
+        }
+      });
+
+      pre.appendChild(btn);
+      pre.appendChild(code);
+      el.appendChild(pre);
+    });
+  }
+
+  function setupSearch(){
+    const input = document.getElementById("search");
+    const topics = () => Array.from(document.querySelectorAll(".topic"));
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      topics().forEach(t => {
+        const kw = (t.getAttribute("data-keywords") || "").toLowerCase();
+        const text = t.innerText.toLowerCase();
+        const show = !q || kw.includes(q) || text.includes(q);
+        t.style.display = show ? "" : "none";
+      });
+    });
+  }
+
+  function setupExpandCollapse(){
+    const allDetails = () => Array.from(document.querySelectorAll("details"));
+    document.getElementById("expandAll").addEventListener("click", () => allDetails().forEach(d => d.open = true));
+    document.getElementById("collapseAll").addEventListener("click", () => allDetails().forEach(d => d.open = false));
+  }
+
+  function setupCopyLink(){
+    const btn = document.getElementById("copyLink");
+    btn.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(window.location.href);
+        const old = btn.textContent;
+        btn.textContent = "Link copied!";
+        setTimeout(()=>btn.textContent=old, 900);
+      }catch(e){
+        btn.textContent = "Copy failed";
+        setTimeout(()=>btn.textContent="Copy page link", 900);
+      }
+    });
+  }
+
+  function setupSmoothScroll(){
+    document.querySelectorAll(".toc a, .pillrow a").forEach(a => {
+      a.addEventListener("click", (e) => {
+        const href = a.getAttribute("href");
+        if(!href || !href.startsWith("#")) return;
+        const target = document.querySelector(href);
+        if(!target) return;
+        e.preventDefault();
+        target.scrollIntoView({behavior:"smooth", block:"start"});
+        history.pushState(null, "", href);
+      });
+    });
+  }
+
+  renderCodeblocks();
+  setupSearch();
+  setupExpandCollapse();
+  setupCopyLink();
+  setupSmoothScroll();
+</script>
+</body>
+</html>
