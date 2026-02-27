@@ -1,1 +1,1660 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Python for Bioinformatics — End-to-End Course (Basics → NumPy/Pandas → Viz → Sequence Analysis)</title>
+  <meta name="description" content="A complete GitHub Pages-ready course: Python basics, files, functions, OOP, testing, environments, NumPy, Pandas, Matplotlib, Plotly, bioinformatics libraries (Biopython, pysam, pyfaidx, scikit-bio), and end-to-end mini pipelines with code examples." />
 
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e9eefc;
+      --muted:#aab6e8;
+      --accent:#7aa2ff;
+      --accent2:#70ffd1;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(122,162,255,.20), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(112,255,209,.12), transparent 55%),
+        var(--bg);
+      color:var(--text);
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    header{padding:28px 18px 18px; max-width:1280px; margin:0 auto;}
+    .hero{
+      background: linear-gradient(135deg, rgba(122,162,255,.18), rgba(17,26,51,.0));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px 18px;
+    }
+    h1{margin:0 0 8px; font-size: clamp(22px, 4vw, 36px); letter-spacing:.2px;}
+    .subtitle{margin:0 0 12px; color:var(--muted); line-height:1.6; font-size:15px; max-width:1150px;}
+    .kicker{
+      color:var(--accent2);
+      font-weight:900;
+      letter-spacing:.35px;
+      text-transform:uppercase;
+      font-size:12px;
+      margin-top:12px;
+    }
+    .top-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .search-wrap{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex:1;
+      min-width:260px;
+    }
+    input[type="search"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.04);
+      color:var(--text);
+      outline:none;
+    }
+    input[type="search"]::placeholder{color:rgba(233,238,252,.55)}
+    .btn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:800;
+      white-space:nowrap;
+    }
+    .btn:hover{background: rgba(255,255,255,.10)}
+    main{
+      max-width:1280px;
+      margin:0 auto;
+      padding: 0 18px 48px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:14px;
+    }
+    nav{
+      position:sticky;
+      top:14px;
+      align-self:start;
+      height: calc(100vh - 28px);
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.55);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      padding:12px;
+    }
+    nav h2{
+      font-size:13px;
+      margin:6px 8px 10px;
+      color:var(--muted);
+      letter-spacing:.4px;
+      text-transform:uppercase;
+    }
+    .toc a{
+      display:block;
+      padding:8px 10px;
+      border-radius:12px;
+      color:var(--text);
+      border:1px solid transparent;
+      font-size: 14px;
+      line-height:1.35;
+    }
+    .toc a:hover{
+      background: rgba(255,255,255,.06);
+      border-color: var(--border);
+      text-decoration:none;
+    }
+    .content{display:flex; flex-direction:column; gap:12px;}
+    .card{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background: rgba(17,26,51,.45);
+      backdrop-filter: blur(10px);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card-header{
+      padding:14px 16px;
+      border-bottom:1px solid var(--border);
+      background: rgba(15,23,48,.55);
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .card-title{margin:0; font-size:16px; line-height:1.35}
+    .tag{
+      font-size:12px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      padding:4px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.04);
+      white-space:nowrap;
+    }
+    .card-body{
+      padding:14px 16px 16px;
+      color:var(--text);
+      line-height:1.65;
+      font-size:14.5px;
+    }
+    .muted{color:var(--muted)}
+    .small{font-size:13px}
+    .grid2{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:12px;
+      margin-top:10px;
+    }
+    .box{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      background: rgba(0,0,0,.20);
+    }
+    .box h3{margin:0 0 6px; font-size:14px}
+    .box p{margin:0; color:var(--muted); font-size:13.5px; line-height:1.55}
+
+    details{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:10px 12px;
+      margin:12px 0 0;
+    }
+    summary{
+      cursor:pointer;
+      font-weight:900;
+      color:var(--text);
+      list-style:none;
+      user-select:none;
+    }
+    summary::-webkit-details-marker{display:none}
+    summary:before{content:"▸"; margin-right:8px; color:var(--muted)}
+    details[open] summary:before{content:"▾"}
+
+    .codeblock pre{
+      margin:10px 0 0;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.32);
+      overflow:auto;
+      padding: 14px 12px 12px;
+      position: relative;
+    }
+    .codeblock code{
+      font-family: var(--mono);
+      font-size: 12.6px;
+      line-height: 1.55;
+      white-space: pre;
+      display:block;
+    }
+    .copy-btn{
+      position:absolute;
+      top:10px;
+      right:10px;
+      padding:6px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+      user-select:none;
+    }
+    .copy-btn:hover{background: rgba(255,255,255,.10)}
+
+    .pillrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      color:var(--text);
+      font-weight:900;
+      font-size:13px;
+    }
+    .pill:hover{background: rgba(255,255,255,.10); text-decoration:none}
+
+    .warn{
+      border-left: 4px solid rgba(255, 180, 90, .9);
+      padding: 10px 12px;
+      background: rgba(255, 180, 90, .08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    .ok{
+      border-left: 4px solid rgba(112,255,209,.9);
+      padding: 10px 12px;
+      background: rgba(112,255,209,.08);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background: rgba(0,0,0,.18);
+      margin-top:10px;
+    }
+    th, td{
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+      font-size:13.5px;
+      line-height:1.45;
+    }
+    th{
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font-weight:900;
+      font-size:13px;
+      letter-spacing:.2px;
+    }
+    tr:last-child td{border-bottom:none}
+
+    ul, ol{margin: 8px 0 0 18px}
+    li{margin: 4px 0}
+    .mono{font-family:var(--mono)}
+    code.inline{font-family:var(--mono); font-size: 0.95em; background: rgba(0,0,0,.25); border:1px solid var(--border); padding:2px 6px; border-radius:10px;}
+    @media (max-width: 1100px){
+      main{grid-template-columns:1fr}
+      nav{position:relative; height:auto}
+      .grid2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <div class="hero">
+    <h1>Python for Bioinformatics — End-to-End Course</h1>
+    <p class="subtitle">
+      From absolute Python basics to data science essentials (NumPy/Pandas), visualization (Matplotlib + Plotly),
+      and bioinformatics-specific libraries for sequence analysis, alignments, BAM/VCF handling, and reproducible pipelines.
+      Includes runnable code examples for each concept/function.
+    </p>
+
+    <div class="kicker">How to use</div>
+    <p class="subtitle">
+      Publish this file as <code class="inline">index.html</code> in your GitHub Pages repo. Use the left navigation.
+      Expand lessons to see code and mini-exercises.
+    </p>
+
+    <div class="top-actions">
+      <div class="search-wrap">
+        <input id="search" type="search" placeholder="Filter (e.g., 'fasta', 'pandas groupby', 'matplotlib', 'plotly', 'biopython', 'pysam', 'vcf', 'argparse')…" />
+        <button class="btn" id="expandAll">Expand all</button>
+        <button class="btn" id="collapseAll">Collapse all</button>
+      </div>
+      <button class="btn" id="copyLink">Copy page link</button>
+    </div>
+
+    <div class="pillrow">
+      <a class="pill" href="#setup">Setup</a>
+      <a class="pill" href="#basics">Basics</a>
+      <a class="pill" href="#files">Files</a>
+      <a class="pill" href="#functions">Functions</a>
+      <a class="pill" href="#numpy">NumPy</a>
+      <a class="pill" href="#pandas">Pandas</a>
+      <a class="pill" href="#viz">Visualization</a>
+      <a class="pill" href="#seq">Sequence</a>
+      <a class="pill" href="#bamvcf">BAM/VCF</a>
+      <a class="pill" href="#pipeline">Pipeline</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <nav>
+    <h2>Course map</h2>
+    <div class="toc">
+      <a href="#setup">0) Setup for bioinformatics Python</a>
+      <a href="#basics">1) Python basics (syntax, types, flow)</a>
+      <a href="#datastruct">2) Data structures (list/dict/set/tuple)</a>
+      <a href="#strings">3) Strings & text processing (FASTQ/FASTA)</a>
+      <a href="#files">4) Files, paths, gzip, streaming</a>
+      <a href="#errors">5) Errors, exceptions, logging</a>
+      <a href="#functions">6) Functions, typing, docstrings</a>
+      <a href="#oop">7) Classes (light OOP for parsers)</a>
+      <a href="#cli">8) Command-line tools (argparse)</a>
+      <a href="#venv">9) Environments (conda/pip), reproducibility</a>
+
+      <a href="#numpy">10) NumPy (arrays, broadcasting, stats)</a>
+      <a href="#pandas">11) Pandas (IO, filtering, groupby, merge)</a>
+      <a href="#matplotlib">12) Matplotlib (publication plots)</a>
+      <a href="#plotly">13) Plotly (interactive plots)</a>
+
+      <a href="#seq">14) Sequence analysis libraries (Biopython, pyfaidx)</a>
+      <a href="#alignment">15) Alignments & distances (pairwise, k-mers)</a>
+      <a href="#bamvcf">16) BAM/CRAM/VCF handling (pysam, cyvcf2)</a>
+      <a href="#skbio">17) scikit-bio (alpha/beta diversity, phylo basics)</a>
+
+      <a href="#parallel">18) Parallelization patterns (bio-scale)</a>
+      <a href="#testing">19) Testing + packaging</a>
+      <a href="#pipeline">20) Capstone: mini end-to-end pipeline (FASTA → QC → stats → plots → report)</a>
+      <a href="#cheatsheet">21) Cheatsheet</a>
+    </div>
+  </nav>
+
+  <section class="content">
+
+    <!-- Setup -->
+    <article class="card topic" id="setup" data-keywords="setup conda mamba pip environment jupyter ipykernel bioinformatics">
+      <div class="card-header">
+        <h2 class="card-title">0) Setup for bioinformatics Python</h2>
+        <span class="tag">Start here</span>
+      </div>
+      <div class="card-body">
+        <div class="grid2">
+          <div class="box">
+            <h3>Recommended</h3>
+            <p>
+              Use <b>mamba/conda</b> to manage scientific + bioinformatics dependencies.
+              Use a dedicated environment per project.
+            </p>
+          </div>
+          <div class="box">
+            <h3>Why</h3>
+            <p>
+              Bio tools depend on compiled libraries. Conda solves that more reliably than pip alone.
+            </p>
+          </div>
+        </div>
+
+        <details open>
+          <summary>Create an environment (common bioinformatics stack)</summary>
+          <div class="codeblock" data-src="code-conda-env" data-lang="bash"></div>
+        </details>
+
+        <details>
+          <summary>Install with pip only (if you must)</summary>
+          <div class="codeblock" data-src="code-pip-env" data-lang="bash"></div>
+        </details>
+
+        <div class="warn">
+          For HPC: pin versions and export environment YAML. Always record Python version + library versions in your results.
+        </div>
+      </div>
+    </article>
+
+    <!-- Basics -->
+    <article class="card topic" id="basics" data-keywords="python basics variables types if for while comprehension">
+      <div class="card-header">
+        <h2 class="card-title">1) Python basics: types, control flow, idioms</h2>
+        <span class="tag">Fundamentals</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Core built-in types</summary>
+          <ul>
+            <li><code class="inline">int</code>, <code class="inline">float</code>, <code class="inline">str</code>, <code class="inline">bool</code></li>
+            <li><code class="inline">list</code>, <code class="inline">tuple</code>, <code class="inline">dict</code>, <code class="inline">set</code></li>
+            <li><code class="inline">None</code></li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Code examples</summary>
+          <div class="codeblock" data-src="code-basics" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>Mini exercise</summary>
+          <ul>
+            <li>Write a loop to count how many sequences in a list are longer than 1000 bp.</li>
+            <li>Rewrite it using a list comprehension.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Data structures -->
+    <article class="card topic" id="datastruct" data-keywords="list dict set tuple collections defaultdict counter">
+      <div class="card-header">
+        <h2 class="card-title">2) Data structures for bioinformatics (lists/dicts/sets + Counter)</h2>
+        <span class="tag">Core skills</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>When to use what</summary>
+          <ul>
+            <li><b>List</b>: ordered items (reads, contigs, samples)</li>
+            <li><b>Dict</b>: key → value (gene → count, sample → metadata)</li>
+            <li><b>Set</b>: membership tests (unique genes, unique k-mers)</li>
+            <li><b>Tuple</b>: immutable record (chrom, pos)</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Code examples: dict patterns, Counter, defaultdict</summary>
+          <div class="codeblock" data-src="code-ds" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Strings -->
+    <article class="card topic" id="strings" data-keywords="strings parsing fasta fastq regex split join strip">
+      <div class="card-header">
+        <h2 class="card-title">3) Strings & text processing (FASTA/FASTQ mindset)</h2>
+        <span class="tag">Critical</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Common string operations in bioinformatics</summary>
+          <ul>
+            <li><code class="inline">strip()</code>, <code class="inline">split()</code>, <code class="inline">join()</code>, <code class="inline">replace()</code></li>
+            <li>Working with headers: extracting sample IDs, contig names, coordinates</li>
+            <li>Regex for complex patterns</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Code examples: parse FASTA headers + compute GC%</summary>
+          <div class="codeblock" data-src="code-strings" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Files -->
+    <article class="card topic" id="files" data-keywords="files pathlib gzip reading writing streaming tsv csv">
+      <div class="card-header">
+        <h2 class="card-title">4) Files & paths: FASTA/FASTQ/TSV/CSV/GZIP</h2>
+        <span class="tag">Practical</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Key principles</summary>
+          <ul>
+            <li>Use <code class="inline">pathlib</code> for paths.</li>
+            <li>Stream large files (don’t read entire FASTQ into memory).</li>
+            <li>Support gzip transparently for real-world pipelines.</li>
+          </ul>
+        </details>
+
+        <details open>
+          <summary>Code examples: safe file reading + gzip + streaming FASTQ</summary>
+          <div class="codeblock" data-src="code-files" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Errors -->
+    <article class="card topic" id="errors" data-keywords="errors exceptions try except logging debug">
+      <div class="card-header">
+        <h2 class="card-title">5) Errors, exceptions, logging (bio pipelines need this)</h2>
+        <span class="tag">Production</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Pattern: validate inputs early</summary>
+          <div class="codeblock" data-src="code-errors" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>Logging basics</summary>
+          <div class="codeblock" data-src="code-logging" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Functions -->
+    <article class="card topic" id="functions" data-keywords="functions typing docstrings return generator iterator">
+      <div class="card-header">
+        <h2 class="card-title">6) Functions, typing, docstrings (clean reusable code)</h2>
+        <span class="tag">Maintainable</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Functions + type hints + docstring</summary>
+          <div class="codeblock" data-src="code-functions" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>Generators for streaming records (FASTA/FASTQ)</summary>
+          <div class="codeblock" data-src="code-generators" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- OOP -->
+    <article class="card topic" id="oop" data-keywords="oop class dataclass bioinformatics record parser">
+      <div class="card-header">
+        <h2 class="card-title">7) Light OOP: dataclasses for records (FASTA/VCF rows)</h2>
+        <span class="tag">Optional but useful</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Example: dataclass for a FASTA record</summary>
+          <div class="codeblock" data-src="code-oop" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- CLI -->
+    <article class="card topic" id="cli" data-keywords="argparse cli command line scripts bioinformatics">
+      <div class="card-header">
+        <h2 class="card-title">8) Build command-line tools with argparse</h2>
+        <span class="tag">Bio standard</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Example: CLI tool to compute FASTA stats</summary>
+          <div class="codeblock" data-src="code-argparse" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Environments -->
+    <article class="card topic" id="venv" data-keywords="conda environment yaml pip freeze reproducibility">
+      <div class="card-header">
+        <h2 class="card-title">9) Reproducibility: environments + version pinning</h2>
+        <span class="tag">Must-have</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Export environment and record versions</summary>
+          <div class="codeblock" data-src="code-repro" data-lang="bash"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- NumPy -->
+    <article class="card topic" id="numpy" data-keywords="numpy arrays broadcasting vectorization random statistics">
+      <div class="card-header">
+        <h2 class="card-title">10) NumPy for bioinformatics: arrays, vectorization, stats</h2>
+        <span class="tag">Data core</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Key functions you must know</summary>
+          <table>
+            <thead>
+              <tr><th>Task</th><th>Functions</th><th>Use-case</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Create arrays</td><td><code class="inline">np.array</code>, <code class="inline">np.zeros</code>, <code class="inline">np.arange</code></td><td>Vectors, matrices, signals</td></tr>
+              <tr><td>Stats</td><td><code class="inline">mean</code>, <code class="inline">std</code>, <code class="inline">percentile</code></td><td>Coverage stats, QC</td></tr>
+              <tr><td>Boolean masks</td><td><code class="inline">arr[mask]</code></td><td>Filter reads/variants</td></tr>
+              <tr><td>Linear algebra</td><td><code class="inline">np.linalg</code></td><td>PCA/SVD, regression</td></tr>
+            </tbody>
+          </table>
+        </details>
+
+        <details open>
+          <summary>Code examples: vectorization + masking + basic stats</summary>
+          <div class="codeblock" data-src="code-numpy" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Pandas -->
+    <article class="card topic" id="pandas" data-keywords="pandas dataframe read_csv groupby merge pivot melt apply">
+      <div class="card-header">
+        <h2 class="card-title">11) Pandas for bioinformatics: IO, filtering, groupby, merges</h2>
+        <span class="tag">Metadata + tables</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Core functions (with bio examples)</summary>
+          <div class="codeblock" data-src="code-pandas-core" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>Common pitfalls</summary>
+          <ul>
+            <li><b>Mixed types</b> in columns → set <code class="inline">dtype</code> explicitly for IDs.</li>
+            <li><b>Large files</b> → use <code class="inline">chunksize</code> or Polars/Dask when needed.</li>
+            <li><b>apply()</b> is slow for row-wise loops; prefer vectorized operations.</li>
+          </ul>
+        </details>
+      </div>
+    </article>
+
+    <!-- Visualization -->
+    <article class="card topic" id="viz" data-keywords="visualization plotting matplotlib plotly">
+      <div class="card-header">
+        <h2 class="card-title">12–13) Visualization: Matplotlib (static) + Plotly (interactive)</h2>
+        <span class="tag">Plots</span>
+      </div>
+      <div class="card-body">
+        <details open id="matplotlib">
+          <summary>Matplotlib essentials (publication-ready)</summary>
+          <div class="codeblock" data-src="code-matplotlib" data-lang="python"></div>
+        </details>
+
+        <details id="plotly">
+          <summary>Plotly essentials (interactive dashboards)</summary>
+          <div class="codeblock" data-src="code-plotly" data-lang="python"></div>
+        </details>
+
+        <div class="ok">
+          Tip: Use Matplotlib for papers, Plotly for exploration + web dashboards.
+        </div>
+      </div>
+    </article>
+
+    <!-- Sequence analysis -->
+    <article class="card topic" id="seq" data-keywords="sequence biopython fasta fastq translate reverse complement gc content">
+      <div class="card-header">
+        <h2 class="card-title">14) Sequence analysis libraries: Biopython + pyfaidx</h2>
+        <span class="tag">Bio-specific</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Biopython: read FASTA, reverse complement, translate</summary>
+          <div class="codeblock" data-src="code-biopython" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>pyfaidx: random-access a huge reference FASTA</summary>
+          <div class="codeblock" data-src="code-pyfaidx" data-lang="python"></div>
+        </details>
+
+        <div class="warn">
+          When translating DNA → protein: handle partial codons, ambiguous bases, and stop codons explicitly.
+        </div>
+      </div>
+    </article>
+
+    <!-- Alignment & distances -->
+    <article class="card topic" id="alignment" data-keywords="alignment pairwise distance kmer edit distance needleman wunsch">
+      <div class="card-header">
+        <h2 class="card-title">15) Alignments & distances: pairwise alignment + k-mers</h2>
+        <span class="tag">Core bio algorithms</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Biopython pairwise alignments (simple)</summary>
+          <div class="codeblock" data-src="code-pairwise" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>K-mer counting (fast pattern)</summary>
+          <div class="codeblock" data-src="code-kmers" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- BAM/VCF -->
+    <article class="card topic" id="bamvcf" data-keywords="pysam bam cram vcf cyvcf2 samtools pileup">
+      <div class="card-header">
+        <h2 class="card-title">16) BAM/CRAM/VCF handling: pysam + cyvcf2</h2>
+        <span class="tag">NGS I/O</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>pysam: iterate reads + pileup coverage</summary>
+          <div class="codeblock" data-src="code-pysam" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>cyvcf2: parse VCF efficiently</summary>
+          <div class="codeblock" data-src="code-cyvcf2" data-lang="python"></div>
+        </details>
+
+        <div class="warn">
+          VCF parsing: treat chromosome names consistently (e.g., "chr1" vs "1") and watch 0-based vs 1-based coordinates.
+        </div>
+      </div>
+    </article>
+
+    <!-- scikit-bio -->
+    <article class="card topic" id="skbio" data-keywords="scikit-bio diversity alpha beta bray curtis unifrac">
+      <div class="card-header">
+        <h2 class="card-title">17) scikit-bio: diversity + distance matrices (microbiome basics)</h2>
+        <span class="tag">Optional</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Alpha/beta diversity and PCoA</summary>
+          <div class="codeblock" data-src="code-skbio" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Parallel -->
+    <article class="card topic" id="parallel" data-keywords="parallel multiprocessing concurrent futures joblib dask snakemake nextflow">
+      <div class="card-header">
+        <h2 class="card-title">18) Parallelization patterns (bio-scale workloads)</h2>
+        <span class="tag">Performance</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Pattern A: concurrent.futures for many files</summary>
+          <div class="codeblock" data-src="code-parallel" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>Pattern B: job arrays on HPC (sbatch generator)</summary>
+          <div class="codeblock" data-src="code-sbatch-gen" data-lang="python"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Testing -->
+    <article class="card topic" id="testing" data-keywords="testing pytest packaging pyproject toml">
+      <div class="card-header">
+        <h2 class="card-title">19) Testing + packaging (make it reusable)</h2>
+        <span class="tag">Engineering</span>
+      </div>
+      <div class="card-body">
+        <details open>
+          <summary>Minimal pytest example</summary>
+          <div class="codeblock" data-src="code-pytest" data-lang="python"></div>
+        </details>
+
+        <details>
+          <summary>Minimal pyproject.toml skeleton</summary>
+          <div class="codeblock" data-src="code-pyproject" data-lang="toml"></div>
+        </details>
+      </div>
+    </article>
+
+    <!-- Capstone pipeline -->
+    <article class="card topic" id="pipeline" data-keywords="capstone pipeline fasta qc stats plots report">
+      <div class="card-header">
+        <h2 class="card-title">20) Capstone: mini end-to-end pipeline (FASTA → QC → stats → plots → report)</h2>
+        <span class="tag">End-to-end</span>
+      </div>
+      <div class="card-body">
+        <p class="muted">
+          This capstone shows how the pieces connect: parse sequences, compute per-sequence stats, summarize with pandas,
+          plot distributions, and export a report CSV + HTML plot.
+        </p>
+
+        <details open>
+          <summary>Single-script pipeline example</summary>
+          <div class="codeblock" data-src="code-capstone" data-lang="python"></div>
+        </details>
+
+        <div class="ok">
+          Upgrade path: wrap this into a CLI, add parallelization, add unit tests, then put it on GitHub.
+        </div>
+      </div>
+    </article>
+
+    <!-- Cheatsheet -->
+    <article class="card topic" id="cheatsheet" data-keywords="cheatsheet quick reference">
+      <div class="card-header">
+        <h2 class="card-title">21) Cheatsheet (quick reference)</h2>
+        <span class="tag">Quick</span>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>Goal</th><th>Use</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Read TSV</td><td>Pandas</td><td><code class="inline">pd.read_csv("x.tsv", sep="\\t")</code></td></tr>
+            <tr><td>FASTA parse</td><td>Biopython</td><td><code class="inline">SeqIO.parse("x.fasta","fasta")</code></td></tr>
+            <tr><td>Random access FASTA</td><td>pyfaidx</td><td><code class="inline">Fasta("ref.fa")["chr1"][100:200]</code></td></tr>
+            <tr><td>Read BAM</td><td>pysam</td><td><code class="inline">AlignmentFile("a.bam","rb")</code></td></tr>
+            <tr><td>Read VCF</td><td>cyvcf2</td><td><code class="inline">VCF("x.vcf.gz")</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+  </section>
+</main>
+
+<!-- =========================
+     CODE SNIPPETS (RAW TEXT)
+========================= -->
+
+<script type="text/plain" id="code-conda-env">
+# Create a bioinformatics-friendly Python environment
+# (Use mamba if available; it is much faster than conda.)
+mamba create -n pybio -y -c conda-forge -c bioconda \
+  python=3.11 \
+  numpy pandas scipy scikit-learn \
+  matplotlib plotly seaborn \
+  biopython pysam pyfaidx cyvcf2 \
+  scikit-bio \
+  jupyterlab ipykernel \
+  tqdm rich
+
+mamba activate pybio
+
+# Optional: register env as a Jupyter kernel
+python -m ipykernel install --user --name pybio --display-name "Python (pybio)"
+</script>
+
+<script type="text/plain" id="code-pip-env">
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip wheel setuptools
+pip install numpy pandas scipy scikit-learn matplotlib plotly biopython tqdm
+</script>
+
+<script type="text/plain" id="code-basics">
+# Variables + types
+x = 10              # int
+y = 3.14            # float
+name = "PAO1"       # str
+is_good = True      # bool
+
+# if/elif/else
+if x > 5:
+    print("x is big")
+elif x == 5:
+    print("x is 5")
+else:
+    print("x is small")
+
+# for loops
+genes = ["oprD", "exoU", "exoS"]
+for g in genes:
+    print("gene:", g)
+
+# while loops (rare in data analysis, but useful sometimes)
+n = 0
+while n < 3:
+    print("n:", n)
+    n += 1
+
+# list comprehension (fast + pythonic)
+lengths = [len(g) for g in genes]
+long_genes = [g for g in genes if len(g) >= 4]
+
+print("lengths:", lengths)
+print("long genes:", long_genes)
+</script>
+
+<script type="text/plain" id="code-ds">
+from collections import Counter, defaultdict
+
+seqs = ["ATGC", "ATG", "ATGC", "AAAA"]
+
+# Counter: counts occurrences
+c = Counter(seqs)
+print("Counts:", c)
+print("Most common:", c.most_common(2))
+
+# set: unique items
+unique_seqs = set(seqs)
+print("Unique:", unique_seqs)
+
+# dict: mapping id -> sequence
+id_to_seq = {"s1":"ATGC", "s2":"AAAA"}
+print(id_to_seq["s1"])
+
+# defaultdict: build lists or counts without checking existence
+gene_to_samples = defaultdict(list)
+gene_to_samples["oprD"].append("S1")
+gene_to_samples["oprD"].append("S2")
+gene_to_samples["exoU"].append("S3")
+print(dict(gene_to_samples))
+
+# defaultdict(int) for counting
+kmer_counts = defaultdict(int)
+for s in seqs:
+    kmer_counts[s[:2]] += 1
+print(dict(kmer_counts))
+</script>
+
+<script type="text/plain" id="code-strings">
+def gc_fraction(seq: str) -> float:
+    seq = seq.upper()
+    if not seq:
+        return 0.0
+    gc = sum(1 for b in seq if b in {"G","C"})
+    return gc / len(seq)
+
+header = ">sample01|contig=NODE_3_length_10452_cov_12.4"
+parts = header[1:].split("|")
+sample_id = parts[0]
+contig_info = dict(p.split("=", 1) for p in parts[1:] if "=" in p)
+
+print("sample:", sample_id)
+print("contig:", contig_info.get("contig"))
+print("gc(ATGCCG):", gc_fraction("ATGCCG"))
+</script>
+
+<script type="text/plain" id="code-files">
+from pathlib import Path
+import gzip
+
+def open_maybe_gzip(path: str, mode: str = "rt"):
+    p = Path(path)
+    if p.suffix == ".gz":
+        return gzip.open(p, mode)
+    return open(p, mode)
+
+# Stream a FASTQ (4 lines per record)
+def iter_fastq(path: str):
+    with open_maybe_gzip(path, "rt") as f:
+        while True:
+            h = f.readline()
+            if not h:
+                break
+            seq = f.readline().rstrip("\n")
+            plus = f.readline()
+            qual = f.readline().rstrip("\n")
+            yield h.rstrip("\n"), seq, plus.rstrip("\n"), qual
+
+# Example usage:
+# for h, seq, plus, qual in iter_fastq("reads.fastq.gz"):
+#     print(h, len(seq))
+#     break
+
+# Read TSV safely
+def read_tsv(path: str):
+    rows = []
+    with open_maybe_gzip(path, "rt") as f:
+        header = f.readline().rstrip("\n").split("\t")
+        for line in f:
+            vals = line.rstrip("\n").split("\t")
+            rows.append(dict(zip(header, vals)))
+    return rows
+</script>
+
+<script type="text/plain" id="code-errors">
+from pathlib import Path
+
+def require_file(path: str) -> Path:
+    p = Path(path)
+    if not p.exists():
+        raise FileNotFoundError(f"Input file not found: {p}")
+    if p.is_dir():
+        raise IsADirectoryError(f"Expected a file but got a directory: {p}")
+    return p
+
+try:
+    require_file("missing.fasta")
+except Exception as e:
+    print("ERROR:", e)
+</script>
+
+<script type="text/plain" id="code-logging">
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
+)
+
+logging.info("Starting pipeline")
+logging.warning("This is a warning (e.g., low coverage sample)")
+logging.error("This is an error (e.g., invalid FASTA)")
+</script>
+
+<script type="text/plain" id="code-functions">
+from typing import Iterable
+
+def n50(lengths: Iterable[int]) -> int:
+    """
+    Compute N50 of contig lengths.
+    N50 is the length L such that 50% of the assembly is contained in contigs of length >= L.
+    """
+    lengths = sorted([int(x) for x in lengths], reverse=True)
+    total = sum(lengths)
+    cum = 0
+    for L in lengths:
+        cum += L
+        if cum >= total * 0.5:
+            return L
+    return 0
+
+print("N50:", n50([100, 200, 300, 1000, 150]))
+</script>
+
+<script type="text/plain" id="code-generators">
+def iter_fasta(path: str):
+    """
+    Minimal FASTA iterator (streaming).
+    Yields (header, sequence) without loading the entire file.
+    """
+    header = None
+    seq_chunks = []
+    with open(path, "rt") as f:
+        for line in f:
+            line = line.rstrip("\n")
+            if not line:
+                continue
+            if line.startswith(">"):
+                if header is not None:
+                    yield header, "".join(seq_chunks)
+                header = line[1:].split()[0]
+                seq_chunks = []
+            else:
+                seq_chunks.append(line)
+        if header is not None:
+            yield header, "".join(seq_chunks)
+
+# Example:
+# for h, seq in iter_fasta("genome.fasta"):
+#     print(h, len(seq))
+#     break
+</script>
+
+<script type="text/plain" id="code-oop">
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class FastaRecord:
+    id: str
+    seq: str
+
+    @property
+    def length(self) -> int:
+        return len(self.seq)
+
+    @property
+    def gc(self) -> float:
+        s = self.seq.upper()
+        if not s:
+            return 0.0
+        gc = sum(1 for b in s if b in {"G","C"})
+        return gc / len(s)
+
+rec = FastaRecord(id="contig1", seq="ATGCCCGT")
+print(rec.id, rec.length, rec.gc)
+</script>
+
+<script type="text/plain" id="code-argparse">
+import argparse
+from pathlib import Path
+
+def iter_fasta(path: Path):
+    header = None
+    seq = []
+    with path.open("rt") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith(">"):
+                if header:
+                    yield header, "".join(seq)
+                header = line[1:].split()[0]
+                seq = []
+            else:
+                seq.append(line)
+        if header:
+            yield header, "".join(seq)
+
+def main():
+    ap = argparse.ArgumentParser(description="Compute simple FASTA stats (count, lengths, GC).")
+    ap.add_argument("--fasta", required=True, help="Input FASTA file")
+    args = ap.parse_args()
+
+    fasta = Path(args.fasta)
+    n = 0
+    lengths = []
+    gcs = []
+
+    for hid, s in iter_fasta(fasta):
+        n += 1
+        lengths.append(len(s))
+        s = s.upper()
+        gcs.append(sum(1 for b in s if b in {"G","C"}) / max(1, len(s)))
+
+    if n == 0:
+        raise SystemExit("No sequences found.")
+
+    print("n_seqs:", n)
+    print("min_len:", min(lengths))
+    print("mean_len:", sum(lengths)/n)
+    print("max_len:", max(lengths))
+    print("mean_gc:", sum(gcs)/n)
+
+if __name__ == "__main__":
+    main()
+</script>
+
+<script type="text/plain" id="code-repro">
+# Export conda environment (exact)
+conda env export -n pybio > environment.yml
+
+# Or: export only explicitly installed packages (cleaner)
+conda env export -n pybio --from-history > environment.from-history.yml
+
+# Record versions at runtime (good habit)
+python -c "import sys, numpy, pandas; print(sys.version); print('numpy', numpy.__version__); print('pandas', pandas.__version__)"
+</script>
+
+<script type="text/plain" id="code-numpy">
+import numpy as np
+
+# Create arrays
+a = np.array([1,2,3], dtype=float)
+b = np.array([10,20,30], dtype=float)
+
+# Vectorized operations (no Python loops)
+c = a + b
+d = a * b
+
+# Broadcasting (add a scalar)
+e = a + 5
+
+# Boolean masking
+mask = b >= 20
+print("mask:", mask)
+print("b[mask]:", b[mask])
+
+# Stats
+print("mean:", b.mean(), "std:", b.std(), "p95:", np.percentile(b, 95))
+
+# Random (reproducible)
+rng = np.random.default_rng(42)
+x = rng.normal(loc=0, scale=1, size=10_000)
+print("x mean ~0:", x.mean(), "x std ~1:", x.std())
+
+# Matrix multiply
+A = np.array([[1,2],[3,4],[5,6]], dtype=float)  # 3x2
+v = np.array([1,1], dtype=float)                # 2
+print("A@v:", A @ v)
+</script>
+
+<script type="text/plain" id="code-pandas-core">
+import pandas as pd
+
+# Read tables
+df = pd.read_csv("metadata.tsv", sep="\t", dtype={"sample_id": "string"})
+print(df.head())
+
+# Filter rows
+df_us = df[df["country"] == "USA"]
+
+# Select columns
+df_small = df[["sample_id", "country", "collection_date"]]
+
+# Create new column
+df["year"] = pd.to_datetime(df["collection_date"], errors="coerce").dt.year
+
+# Groupby summary
+summary = (df
+           .groupby("country", dropna=False)
+           .agg(n_samples=("sample_id", "count"),
+                min_date=("collection_date", "min"),
+                max_date=("collection_date", "max"))
+           .reset_index())
+print(summary.sort_values("n_samples", ascending=False).head())
+
+# Merge (join metadata + results)
+results = pd.read_csv("results.tsv", sep="\t", dtype={"sample_id": "string"})
+merged = df.merge(results, on="sample_id", how="left")
+print(merged.head())
+
+# Pivot (wide format)
+wide = merged.pivot_table(index="country", values="genome_length", aggfunc="mean")
+print(wide.head())
+</script>
+
+<script type="text/plain" id="code-matplotlib">
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Example: distribution of sequence lengths
+lengths = np.array([900, 1100, 1000, 1500, 1200, 800, 2000, 950])
+
+plt.figure()
+plt.hist(lengths, bins=6)
+plt.xlabel("Sequence length (bp)")
+plt.ylabel("Count")
+plt.title("Length distribution")
+plt.tight_layout()
+plt.savefig("length_hist.png", dpi=200)
+plt.close()
+</script>
+
+<script type="text/plain" id="code-plotly">
+import pandas as pd
+import plotly.express as px
+
+df = pd.DataFrame({
+    "sample": ["S1","S2","S3","S4"],
+    "gc": [0.50, 0.62, 0.41, 0.55],
+    "length": [5000, 5200, 4800, 5100]
+})
+
+fig = px.scatter(df, x="length", y="gc", hover_name="sample", title="GC vs length")
+fig.write_html("gc_vs_length.html", include_plotlyjs="cdn")
+</script>
+
+<script type="text/plain" id="code-biopython">
+from Bio import SeqIO
+from Bio.Seq import Seq
+
+# Read FASTA
+for rec in SeqIO.parse("genome.fasta", "fasta"):
+    print(rec.id, len(rec.seq))
+    # Reverse complement
+    rc = rec.seq.reverse_complement()
+    print("rc first 20:", rc[:20])
+    # Translate (assumes coding DNA, careful!)
+    aa = rec.seq[:300].translate(to_stop=True)  # stop at first stop codon
+    print("aa:", aa)
+    break
+
+# Common one-liners
+dna = Seq("ATGAAATGA")
+print("translate:", dna.translate())  # includes stop as "*"
+</script>
+
+<script type="text/plain" id="code-pyfaidx">
+from pyfaidx import Fasta
+
+# Requires an indexed FASTA (.fai will be created if missing)
+ref = Fasta("reference.fasta")
+
+# 0-based slicing style in pyfaidx (end exclusive)
+seq = ref["chr1"][1000:1100]
+print("chr1:1001-1100 length:", len(seq))
+print(str(seq))
+</script>
+
+<script type="text/plain" id="code-pairwise">
+from Bio.Align import PairwiseAligner
+
+aligner = PairwiseAligner()
+aligner.mode = "global"
+aligner.match_score = 2
+aligner.mismatch_score = -1
+aligner.open_gap_score = -2
+aligner.extend_gap_score = -0.5
+
+a = "ACGTTGCA"
+b = "ACGTCGCA"
+
+alns = aligner.align(a, b)
+best = alns[0]
+print("score:", best.score)
+print(best)
+</script>
+
+<script type="text/plain" id="code-kmers">
+from collections import Counter
+
+def kmer_counts(seq: str, k: int) -> Counter:
+    seq = seq.upper()
+    c = Counter()
+    for i in range(0, len(seq) - k + 1):
+        kmer = seq[i:i+k]
+        if "N" in kmer:
+            continue
+        c[kmer] += 1
+    return c
+
+seq = "ATGCGATATATGCG"
+print(kmer_counts(seq, 3).most_common(5))
+</script>
+
+<script type="text/plain" id="code-pysam">
+import pysam
+
+bam = pysam.AlignmentFile("reads.bam", "rb")
+
+# Iterate alignments
+n = 0
+for read in bam.fetch(until_eof=True):
+    if read.is_unmapped:
+        continue
+    n += 1
+    if n <= 3:
+        print(read.query_name, read.reference_name, read.reference_start, read.mapping_quality)
+print("mapped reads inspected:", n)
+
+# Coverage in a region using pileup
+chrom = "chr1"
+start = 100000
+end = 100100
+cov = []
+for pileupcolumn in bam.pileup(chrom, start, end, truncate=True):
+    pos = pileupcolumn.reference_pos
+    depth = pileupcolumn.nsegments
+    cov.append((pos, depth))
+
+print("positions:", len(cov), "mean depth:", sum(d for _,d in cov)/max(1,len(cov)))
+bam.close()
+</script>
+
+<script type="text/plain" id="code-cyvcf2">
+from cyvcf2 import VCF
+
+vcf = VCF("variants.vcf.gz")
+
+n = 0
+for v in vcf:
+    n += 1
+    if n <= 5:
+        # CHROM, POS are 1-based in VCF
+        print(v.CHROM, v.POS, v.REF, v.ALT, v.INFO.get("DP"))
+print("variants:", n)
+</script>
+
+<script type="text/plain" id="code-skbio">
+import numpy as np
+import pandas as pd
+from skbio.diversity import alpha_diversity, beta_diversity
+from skbio.stats.ordination import pcoa
+
+# OTU/ASV count table: samples x features
+counts = pd.DataFrame({
+    "ASV1":[10, 0, 3],
+    "ASV2":[0,  5, 2],
+    "ASV3":[7,  1, 0],
+}, index=["S1","S2","S3"])
+
+# Alpha diversity (Shannon)
+shannon = alpha_diversity("shannon", counts.values, ids=counts.index)
+print(shannon)
+
+# Beta diversity (Bray-Curtis)
+bc = beta_diversity("braycurtis", counts.values, ids=counts.index)
+print(bc)
+
+# Ordination (PCoA)
+ord_res = pcoa(bc)
+print(ord_res.samples.head())
+</script>
+
+<script type="text/plain" id="code-parallel">
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from pathlib import Path
+
+def fasta_len(path: str) -> tuple[str, int]:
+    # minimal FASTA length calculator (sum lengths across records)
+    total = 0
+    with open(path, "rt") as f:
+        for line in f:
+            if line.startswith(">"):
+                continue
+            total += len(line.strip())
+    return (Path(path).name, total)
+
+fasta_files = [str(p) for p in Path("fastas/").glob("*.fasta")]
+
+with ProcessPoolExecutor(max_workers=8) as ex:
+    futures = [ex.submit(fasta_len, fp) for fp in fasta_files]
+    for fut in as_completed(futures):
+        name, length = fut.result()
+        print(name, length)
+</script>
+
+<script type="text/plain" id="code-sbatch-gen">
+from pathlib import Path
+
+FASTAS = sorted(Path("fastas").glob("*.fasta"))
+OUTDIR = Path("sbatch_jobs")
+OUTDIR.mkdir(exist_ok=True, parents=True)
+
+template = """#!/usr/bin/env bash
+#SBATCH -J fasta_stats
+#SBATCH -c 1
+#SBATCH --mem=2G
+#SBATCH -t 00:10:00
+#SBATCH -o logs/%x_%j.out
+#SBATCH -e logs/%x_%j.err
+
+set -euo pipefail
+mkdir -p logs results
+
+python fasta_stats.py --fasta "{fasta}" --out "results/{stem}.tsv"
+"""
+
+for fp in FASTAS:
+    script = template.format(fasta=str(fp), stem=fp.stem)
+    out = OUTDIR / f"job_{fp.stem}.sbatch"
+    out.write_text(script)
+
+print("Wrote", len(FASTAS), "sbatch scripts to", OUTDIR)
+</script>
+
+<script type="text/plain" id="code-pytest">
+# file: test_stats.py
+from stats import gc_fraction
+
+def test_gc_fraction():
+    assert abs(gc_fraction("GC") - 1.0) < 1e-9
+    assert abs(gc_fraction("AT") - 0.0) < 1e-9
+    assert abs(gc_fraction("") - 0.0) < 1e-9
+</script>
+
+<script type="text/plain" id="code-pyproject">
+[project]
+name = "pybio-course-demo"
+version = "0.1.0"
+description = "Demo package for Python bioinformatics course"
+requires-python = ">=3.10"
+dependencies = ["numpy", "pandas", "biopython"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+</script>
+
+<script type="text/plain" id="code-capstone">
+"""
+Capstone: FASTA → per-sequence QC → summary tables → plots
+
+Inputs:
+  --fasta   genome/contigs FASTA file
+Outputs:
+  - per_sequence.tsv
+  - summary_by_bin.tsv
+  - length_hist.png
+  - gc_vs_length.html
+"""
+
+from __future__ import annotations
+import argparse
+from pathlib import Path
+from dataclasses import dataclass
+import pandas as pd
+
+def iter_fasta(path: Path):
+    header = None
+    seq = []
+    with path.open("rt") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith(">"):
+                if header:
+                    yield header, "".join(seq)
+                header = line[1:].split()[0]
+                seq = []
+            else:
+                seq.append(line)
+        if header:
+            yield header, "".join(seq)
+
+def gc_fraction(seq: str) -> float:
+    s = seq.upper()
+    if not s:
+        return 0.0
+    gc = sum(1 for b in s if b in {"G","C"})
+    return gc / len(s)
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--fasta", required=True)
+    ap.add_argument("--outdir", default="results")
+    args = ap.parse_args()
+
+    fasta = Path(args.fasta)
+    outdir = Path(args.outdir)
+    outdir.mkdir(exist_ok=True, parents=True)
+
+    rows = []
+    for hid, seq in iter_fasta(fasta):
+        rows.append({
+            "seq_id": hid,
+            "length_bp": len(seq),
+            "gc": gc_fraction(seq)
+        })
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        raise SystemExit("No FASTA records found.")
+
+    # Example: categorize contigs by length bins
+    df["len_bin"] = pd.cut(df["length_bp"], bins=[0,1000,5000,10000,1_000_000],
+                           labels=["<=1kb","1-5kb","5-10kb",">10kb"], include_lowest=True)
+
+    per_seq = outdir / "per_sequence.tsv"
+    df.to_csv(per_seq, sep="\t", index=False)
+
+    # Summary table
+    summary = (df.groupby("len_bin", dropna=False)
+                 .agg(n=("seq_id","count"),
+                      mean_len=("length_bp","mean"),
+                      mean_gc=("gc","mean"))
+                 .reset_index())
+    summary.to_csv(outdir / "summary_by_bin.tsv", sep="\t", index=False)
+
+    # Matplotlib: length histogram
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.hist(df["length_bp"], bins=30)
+    plt.xlabel("Length (bp)")
+    plt.ylabel("Count")
+    plt.title("FASTA length distribution")
+    plt.tight_layout()
+    plt.savefig(outdir / "length_hist.png", dpi=200)
+    plt.close()
+
+    # Plotly: GC vs length interactive
+    import plotly.express as px
+    fig = px.scatter(df, x="length_bp", y="gc", hover_name="seq_id",
+                     title="GC vs Length")
+    fig.write_html(outdir / "gc_vs_length.html", include_plotlyjs="cdn")
+
+    print("Wrote:", per_seq)
+
+if __name__ == "__main__":
+    main()
+</script>
+
+<script>
+  // Render codeblocks from <script type="text/plain"> sources
+  function renderCodeblocks(){
+    document.querySelectorAll(".codeblock").forEach(el => {
+      const src = el.getAttribute("data-src");
+      const node = document.getElementById(src);
+      if(!node) return;
+      const text = node.textContent.replace(/^\n+|\n+$/g, "");
+
+      const pre = document.createElement("pre");
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.textContent = "Copy";
+
+      const code = document.createElement("code");
+      code.textContent = text;
+
+      btn.addEventListener("click", async () => {
+        try{
+          await navigator.clipboard.writeText(text);
+          const old = btn.textContent;
+          btn.textContent = "Copied!";
+          setTimeout(()=>btn.textContent=old, 900);
+        }catch(e){
+          btn.textContent = "Copy failed";
+          setTimeout(()=>btn.textContent="Copy", 900);
+        }
+      });
+
+      pre.appendChild(btn);
+      pre.appendChild(code);
+      el.appendChild(pre);
+    });
+  }
+
+  // Search filter across .topic cards
+  function setupSearch(){
+    const input = document.getElementById("search");
+    const topics = () => Array.from(document.querySelectorAll(".topic"));
+    input.addEventListener("input", () => {
+      const q = input.value.trim().toLowerCase();
+      topics().forEach(t => {
+        const kw = (t.getAttribute("data-keywords") || "").toLowerCase();
+        const text = t.innerText.toLowerCase();
+        const show = !q || kw.includes(q) || text.includes(q);
+        t.style.display = show ? "" : "none";
+      });
+    });
+  }
+
+  // Expand/collapse all details
+  function setupExpandCollapse(){
+    const allDetails = () => Array.from(document.querySelectorAll("details"));
+    document.getElementById("expandAll").addEventListener("click", () => allDetails().forEach(d => d.open = true));
+    document.getElementById("collapseAll").addEventListener("click", () => allDetails().forEach(d => d.open = false));
+  }
+
+  // Copy page link
+  function setupCopyLink(){
+    const btn = document.getElementById("copyLink");
+    btn.addEventListener("click", async () => {
+      try{
+        await navigator.clipboard.writeText(window.location.href);
+        const old = btn.textContent;
+        btn.textContent = "Link copied!";
+        setTimeout(()=>btn.textContent=old, 900);
+      }catch(e){
+        btn.textContent = "Copy failed";
+        setTimeout(()=>btn.textContent="Copy page link", 900);
+      }
+    });
+  }
+
+  // Smooth scroll for internal anchors
+  function setupSmoothScroll(){
+    document.querySelectorAll(".toc a, .pillrow a").forEach(a => {
+      a.addEventListener("click", (e) => {
+        const href = a.getAttribute("href");
+        if(!href || !href.startsWith("#")) return;
+        const target = document.querySelector(href);
+        if(!target) return;
+        e.preventDefault();
+        target.scrollIntoView({behavior:"smooth", block:"start"});
+        history.pushState(null, "", href);
+      });
+    });
+  }
+
+  renderCodeblocks();
+  setupSearch();
+  setupExpandCollapse();
+  setupCopyLink();
+  setupSmoothScroll();
+</script>
+</body>
+</html>
